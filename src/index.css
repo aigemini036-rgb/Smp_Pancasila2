@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-slate-50: #f4f4f3;
+  --color-slate-100: #e8e9e7;
+  --color-slate-200: #c6c7c4;
+  --color-slate-300: #a4a5a1;
+  --color-slate-400: #8a8b86;
+  --color-slate-500: #6f706b;
+  --color-slate-600: #555651;
+  --color-slate-700: #3f403c;
+  --color-slate-800: #2a2b28;
+  --color-slate-900: #171816;
+  --color-slate-950: #0b0c0a;
+
+  --color-blue-50: #f1f5eb;
+  --color-blue-100: #e0ead0;
+  --color-blue-200: #c4d8a9;
+  --color-blue-300: #a1c07d;
+  --color-blue-400: #83a85b;
+  --color-blue-500: #729144;
+  --color-blue-600: #577332;
+  --color-blue-700: #425827;
+  --color-blue-800: #354622;
+  --color-blue-900: #2e3b1f;
+  --color-blue-950: #1a2410;
+
+  --color-yellow-50: #fffce5;
+  --color-yellow-100: #fff7c2;
+  --color-yellow-200: #ffef8b;
+  --color-yellow-300: #ffe147;
+  --color-yellow-400: #ffd31a;
+  --color-yellow-500: #f9cf00;
+  --color-yellow-600: #d6a100;
+  --color-yellow-700: #a87200;
+  --color-yellow-800: #8a5908;
+  --color-yellow-900: #71460f;
+  --color-yellow-950: #422504;
+
+  --animate-blob: blob 7s infinite;
+  @keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+  }
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 transition-colors duration-300 antialiased;
+}
+
+.dark body {
+  @apply bg-slate-900 text-white;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.text-gradient-animated {
+  background: linear-gradient(to right, #729144, #F9CF00, #8A8B86, #729144);
+  background-size: 300% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: textGradient 6s linear infinite;
+}
+
+@keyframes textGradient {
+  0% { background-position: 0% center; }
+  100% { background-position: 300% center; }
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Hide scrollbar for gallery/horizontal scrolls if needed */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
