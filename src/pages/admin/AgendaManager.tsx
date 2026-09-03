@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getAgenda, saveAgenda, AgendaItem } from '../../utils/storage';
+import { usePermission, Permission } from '../../utils/permissions';
 
 export default function AgendaManager() {
+  const { can } = usePermission();
   const [agendaList, setAgendaList] = useState<AgendaItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -82,13 +84,15 @@ export default function AgendaManager() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Kelola Agenda</h1>
           <p className="text-slate-900 dark:text-white ">Tambahkan, ubah, atau hapus agenda kegiatan.</p>
         </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold px-5 py-2.5 rounded-xl font-semibold transition-colors flex items-center gap-2 shadow-sm"
-        >
-          <Plus className="w-5 h-5" />
-          Tambah Agenda
-        </button>
+        {can(Permission.CREATE_AGENDA) && (
+          <button
+            onClick={() => handleOpenModal()}
+            className="bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold px-5 py-2.5 rounded-xl font-semibold transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <Plus className="w-5 h-5" />
+            Tambah Agenda
+          </button>
+        )}
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -123,18 +127,22 @@ export default function AgendaManager() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleOpenModal(item)}
-                          className="p-2 text-slate-900 dark:text-white hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="p-2 text-slate-900 dark:text-white hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {can(Permission.EDIT_AGENDA) && (
+                          <button
+                            onClick={() => handleOpenModal(item)}
+                            className="p-2 text-slate-900 dark:text-white hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        {can(Permission.DELETE_AGENDA) && (
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="p-2 text-slate-900 dark:text-white hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

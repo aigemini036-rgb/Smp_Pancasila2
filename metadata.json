@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "SMP Pancasila Ponokawan",
+  "description": "Website Resmi & Portal Management SMP Pancasila Ponokawan - Kabupaten Sidoarjo",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
