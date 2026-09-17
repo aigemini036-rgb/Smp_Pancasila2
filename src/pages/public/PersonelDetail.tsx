@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { motion, useReducedMotion } from 'motion/react';
 import { getPeople, getAchievements } from '../../utils/storage';
 import HangingHeadmasterPhoto from '../../components/public/HangingHeadmasterPhoto';
 import {
@@ -15,9 +17,15 @@ import {
 
 export default function PersonelDetail() {
   const { id, slug } = useParams<{ id?: string; slug?: string }>();
+  const shouldReduceMotion = useReducedMotion();
   const people = getPeople();
   const target = slug || id;
   const person = people.find((p) => p.slug === target || p.id === target);
+
+  // Scroll to top when personnel profile opens
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [person?.id]);
 
   if (!person) {
     return (
@@ -64,7 +72,15 @@ export default function PersonelDetail() {
   const isHead = person.category === 'kepala_sekolah';
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 space-y-8">
+    <motion.div
+      initial={shouldReduceMotion ? false : { opacity: 0, y: 16, scale: 0.985 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{
+        duration: shouldReduceMotion ? 0 : 0.28,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+      className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-8"
+    >
       {/* Back Button */}
       <div className="flex items-center justify-between">
         <Link
@@ -84,7 +100,15 @@ export default function PersonelDetail() {
       </div>
 
       {/* Main Profile Header Card */}
-      <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6">
+      <motion.div
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          duration: shouldReduceMotion ? 0 : 0.24,
+          ease: [0.16, 1, 0.3, 1],
+        }}
+        className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6"
+      >
         <div className="relative shrink-0 pt-2">
           {isHead ? (
             <HangingHeadmasterPhoto
@@ -98,11 +122,14 @@ export default function PersonelDetail() {
               }
             />
           ) : (
-            <img
-              src={person.photo}
-              alt={person.name}
-              className="w-36 h-44 sm:w-44 sm:h-52 rounded-2xl object-cover border-4 border-yellow-500/20 shadow-md"
-            />
+            <div className="relative group/photo overflow-hidden rounded-2xl border-4 border-yellow-500/20 hover:border-yellow-500/50 hover:ring-2 hover:ring-yellow-500/20 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300">
+              <img
+                src={person.photo}
+                alt={person.name}
+                className="w-36 h-44 sm:w-44 sm:h-52 rounded-2xl object-cover transition-all duration-300 ease-out group-hover/photo:scale-[1.025] group-hover/photo:-translate-y-0.5"
+              />
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-yellow-500/[0.04] to-white/10 opacity-0 group-hover/photo:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            </div>
           )}
         </div>
 
@@ -159,11 +186,20 @@ export default function PersonelDetail() {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Bio / Ringkasan Profile */}
       {person.short_bio && (
-        <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+        <motion.div
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: shouldReduceMotion ? 0 : 0.24,
+            delay: shouldReduceMotion ? 0 : 0.04,
+            ease: [0.16, 1, 0.3, 1],
+          }}
+          className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3"
+        >
           <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-yellow-500" />
             <span>Biografi & Catatan Pengabdian</span>
@@ -171,11 +207,20 @@ export default function PersonelDetail() {
           <p className="text-slate-700 dark:text-slate-300 text-sm sm:text-base leading-relaxed whitespace-pre-line">
             {person.short_bio}
           </p>
-        </div>
+        </motion.div>
       )}
 
       {/* History Grid */}
-      <div className="grid md:grid-cols-2 gap-6">
+      <motion.div
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          duration: shouldReduceMotion ? 0 : 0.24,
+          delay: shouldReduceMotion ? 0 : 0.08,
+          ease: [0.16, 1, 0.3, 1],
+        }}
+        className="grid md:grid-cols-2 gap-6"
+      >
         {/* Education History */}
         <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
           <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -215,28 +260,42 @@ export default function PersonelDetail() {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Achievements Note */}
       {achievements.length > 0 && (
-        <div className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-md space-y-4">
+        <motion.div
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: shouldReduceMotion ? 0 : 0.24,
+            delay: shouldReduceMotion ? 0 : 0.12,
+            ease: [0.16, 1, 0.3, 1],
+          }}
+          className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-md space-y-4"
+        >
           <h3 className="text-base font-bold text-white flex items-center gap-2">
             <Award className="w-5 h-5 text-yellow-500" />
             <span>Prestasi & Bimbingan Terkait</span>
           </h3>
           <div className="grid sm:grid-cols-2 gap-4">
             {achievements.map((item) => (
-              <div key={item.id} className="p-4 rounded-2xl bg-slate-800 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-yellow-400 uppercase">
+              <div
+                key={item.id}
+                className="group p-4 rounded-2xl bg-slate-800/90 border border-slate-700 hover:border-yellow-500/50 hover:-translate-y-1 hover:scale-[1.01] hover:shadow-lg hover:shadow-black/40 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] space-y-1 cursor-pointer"
+              >
+                <span className="text-[10px] font-bold text-yellow-400 group-hover:text-yellow-300 uppercase transition-colors">
                   Tahun {item.year} • {item.category}
                 </span>
-                <h4 className="font-bold text-sm text-white">{item.title}</h4>
-                <p className="text-xs text-slate-400">{item.description}</p>
+                <h4 className="font-bold text-sm text-white group-hover:text-yellow-400 transition-colors leading-snug">
+                  {item.title}
+                </h4>
+                <p className="text-xs text-slate-400 leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   );
 }

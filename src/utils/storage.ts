@@ -249,11 +249,22 @@ export const defaultAnnouncements: Announcement[] = [
   {
     id: 'a-002',
     slug: 'jadwal-libur-menyambut-bulan-suci-ramadhan',
-    title: 'Jadwal Kegatan Pondok Ramadhan & Libur Awal Puasa',
+    title: 'Jadwal Kegiatan Pondok Ramadhan & Libur Awal Puasa',
     content: 'Diberitahukan kepada seluruh siswa dan wali murid bahwa Libur Permulaan Puasa dimulai tanggal 11-13 Maret 2026. Kegiatan Pondok Ramadhan dilaksanakan tanggal 16-20 Maret 2026.',
     status: 'active',
     start_date: '2026-03-01',
     end_date: '2026-03-25',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'a-003',
+    slug: 'pelaksanaan-asesmen-sumatif-tengah-semester-genap',
+    title: 'Pelaksanaan Asesmen Sumatif Tengah Semester (ASTS) Genap TA 2025/2026',
+    content: 'Jadwal pelaksanaan ASTS Genap bagi seluruh siswa kelas VII, VIII, dan IX akan dimulai serentak menggunakan sistem Computer-Based Test (CBT) di laboratorium komputer sekolah.',
+    status: 'active',
+    start_date: '2026-03-24',
+    end_date: '2026-03-31',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -284,6 +295,19 @@ export const defaultAchievements: Achievement[] = [
     recipient_id: 'p-003',
     year: 2025,
     documentation: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80',
+    status: 'published',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: 'ac-003',
+    slug: 'juara-1-inovasi-robotika-rekayasa-teknologi-pelajar',
+    title: 'Juara 1 Inovasi Robotika & Rekayasa Teknologi Sidoarjo',
+    description: 'Tim Robotik SMP Pancasila Ponokawan berhasil meraih medali emas melalui karya purwarupa sistem otomatisasi hemat energi.',
+    category: 'Teknologi & Sains',
+    level: 'sekolah',
+    year: 2025,
+    documentation: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=800&q=80',
     status: 'published',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -732,7 +756,17 @@ export function deleteAnnouncement(id: string): void {
 export function getAchievements(): Achievement[] {
   const stored = localStorage.getItem(KEYS.ACHIEVEMENTS);
   if (stored) {
-    try { return JSON.parse(stored); } catch { /* ignore */ }
+    try {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length >= 3) {
+        return parsed;
+      }
+      // Merge missing default achievements
+      const existingIds = new Set(parsed.map((a: Achievement) => a.id));
+      const merged = [...parsed, ...defaultAchievements.filter((da) => !existingIds.has(da.id))];
+      localStorage.setItem(KEYS.ACHIEVEMENTS, JSON.stringify(merged));
+      return merged;
+    } catch { /* ignore */ }
   }
   localStorage.setItem(KEYS.ACHIEVEMENTS, JSON.stringify(defaultAchievements));
   return defaultAchievements;

@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { motion, useInView } from 'motion/react';
 import { MapPin, Navigation, School, Compass, Layers, Car, CheckCircle2, ExternalLink } from 'lucide-react';
 
 interface AnimatedMapRouteProps {
@@ -6,10 +7,12 @@ interface AnimatedMapRouteProps {
   phone: string;
 }
 
-export default function AnimatedMapRoute({ address, phone }: AnimatedMapRouteProps) {
+export default function AnimatedMapRoute({ address }: AnimatedMapRouteProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: true, margin: '-40px' });
   const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
+  const [showRouteOverlay, setShowRouteOverlay] = useState(true);
 
   // Exact Google Maps query embed for SMP Pancasila Ponokawan, Krian, Sidoarjo
   const mapEmbedUrl = mapType === 'satellite'
@@ -19,8 +22,11 @@ export default function AnimatedMapRoute({ address, phone }: AnimatedMapRoutePro
   const googleMapsExternalUrl = 'https://maps.google.com/?q=SMP+Pancasila+Ponokawan+Krian+Sidoarjo';
 
   return (
-    <div
+    <motion.div
       ref={containerRef}
+      initial={{ opacity: 0, y: 24 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="bg-slate-900 rounded-3xl p-5 sm:p-7 md:p-8 border border-slate-800 shadow-xl space-y-5 sm:space-y-6 text-white overflow-hidden relative"
     >
       {/* 
@@ -40,6 +46,19 @@ export default function AnimatedMapRoute({ address, phone }: AnimatedMapRoutePro
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Toggle Route Overlay */}
+          <button
+            type="button"
+            onClick={() => setShowRouteOverlay(!showRouteOverlay)}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+              showRouteOverlay
+                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/40'
+                : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+            }`}
+          >
+            {showRouteOverlay ? '✓ Rute Akses Aktif' : 'Tampilkan Rute'}
+          </button>
+
           {/* Map Layer Switcher (Standard vs Satellite) */}
           <div className="inline-flex items-center rounded-xl bg-slate-800/90 p-1 border border-slate-700 text-xs font-semibold">
             <button
@@ -83,7 +102,10 @@ export default function AnimatedMapRoute({ address, phone }: AnimatedMapRoutePro
 
       {/* 
         ========================================================================
-        REAL MAP CANVAS: Google Maps Live Embedded Map
+        36. CONTACT MAP REVEAL & 37. MAP SCHOOL MARKER REVEAL & 38. MAP ROUTE REVEAL
+        - Map container has smooth entrance fade / slide up.
+        - School marker drops in gently and settles stably at coordinate.
+        - Route path draws progressively and stays static after completion.
         ========================================================================
       */}
       <div className="relative w-full h-[360px] sm:h-[420px] md:h-[460px] rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden shadow-inner group">
@@ -107,10 +129,72 @@ export default function AnimatedMapRoute({ address, phone }: AnimatedMapRoutePro
         />
 
         {/* 
-          School Primary Location Marker Badge (Top-Left overlay)
-          Clean, restrained, and clearly marks the destination with school visual identity
+          38. MAP ROUTE REVEAL: Progressive Approach Path Overlay (Stays Static After Draw)
         */}
-        <div className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 pointer-events-none max-w-[calc(100%-24px)] sm:max-w-xs">
+        {showRouteOverlay && isInView && (
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none z-10"
+            viewBox="0 0 800 500"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#EAB308" stopOpacity="0.85" />
+                <stop offset="100%" stopColor="#10B981" stopOpacity="0.95" />
+              </linearGradient>
+              <filter id="routeGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="1" stdDeviation="3" floodColor="#EAB308" floodOpacity="0.6" />
+              </filter>
+            </defs>
+
+            {/* Approach Path corridor */}
+            <motion.path
+              d="M 50 450 Q 220 380 340 320 T 420 220 T 400 140"
+              fill="none"
+              stroke="url(#routeGradient)"
+              strokeWidth="4"
+              strokeDasharray="6 6"
+              strokeLinecap="round"
+              filter="url(#routeGlow)"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 0.95 }}
+              transition={{ duration: 1.4, delay: 0.3, ease: 'easeOut' }}
+            />
+
+            {/* Start Point Dot */}
+            <motion.circle
+              cx="50"
+              cy="450"
+              r="5"
+              fill="#EAB308"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
+            />
+
+            {/* Destination Point Pulse Marker */}
+            <motion.circle
+              cx="400"
+              cy="140"
+              r="6"
+              fill="#10B981"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 1.5, duration: 0.4 }}
+            />
+          </svg>
+        )}
+
+        {/* 
+          37. MAP SCHOOL MARKER REVEAL
+          Drop-in reveal, then settles stably at coordinate.
+        */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.88, y: -16 }}
+          animate={isInView ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.88, y: -16 }}
+          transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 pointer-events-none max-w-[calc(100%-24px)] sm:max-w-xs"
+        >
           <div className="bg-slate-950/90 backdrop-blur-md border border-slate-700/80 rounded-2xl p-3 sm:p-3.5 shadow-xl text-left pointer-events-auto">
             <div className="flex items-start gap-2.5">
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-yellow-500 text-slate-950 flex items-center justify-center shadow-md shrink-0">
@@ -145,7 +229,7 @@ export default function AnimatedMapRoute({ address, phone }: AnimatedMapRoutePro
               </a>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* 
@@ -210,7 +294,7 @@ export default function AnimatedMapRoute({ address, phone }: AnimatedMapRoutePro
           <span className="block text-slate-500">Provinsi Jawa Timur 61262</span>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

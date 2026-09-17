@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'motion/react';
 import {
   GraduationCap,
   MapPin,
@@ -8,7 +9,6 @@ import {
   Facebook,
   Instagram,
   Youtube,
-  ExternalLink,
 } from 'lucide-react';
 import { getSchoolSettings } from '../../utils/storage';
 import AnimatedWaterWaveBackground from './AnimatedWaterWaveBackground';
@@ -16,17 +16,48 @@ import AnimatedWaterWaveBackground from './AnimatedWaterWaveBackground';
 export default function Footer() {
   const settings = getSchoolSettings();
 
+  const columnVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        delay: i * 0.08,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    }),
+  };
+
   return (
     <footer className="relative overflow-hidden bg-slate-900 text-slate-300 pt-16 pb-8 border-t border-slate-800">
-      {/* Animated Multi-Layer Water Wave Background */}
+      {/* 
+        ========================================================================
+        39 & 40: ANIMATED WATER WAVE & MULTI-LAYER DEPTH
+        Gentle speed, horizontal flow, background depth, pointer-events: none.
+        ========================================================================
+      */}
       <AnimatedWaterWaveBackground />
 
+      {/* 
+        ========================================================================
+        41. FOOTER CONTENT REVEAL
+        Staggered entrance: Brand, Links, Information, Contact & Copyright.
+        ========================================================================
+      */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-12">
-          {/* Col 1: Identity */}
-          <div className="space-y-4">
+          {/* Col 1: Identity & Socials */}
+          <motion.div
+            custom={0}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-30px' }}
+            variants={columnVariants}
+            className="space-y-4"
+          >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-yellow-500 overflow-hidden flex items-center justify-center text-slate-950 shadow-sm">
+              <div className="w-10 h-10 rounded-lg bg-yellow-500 overflow-hidden flex items-center justify-center text-slate-950 shadow-xs">
                 {settings.logo ? (
                   <img
                     src={settings.logo}
@@ -84,10 +115,17 @@ export default function Footer() {
                 </a>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* Col 2: Navigation Links */}
-          <div className="space-y-3">
+          <motion.div
+            custom={1}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-30px' }}
+            variants={columnVariants}
+            className="space-y-3"
+          >
             <h3 className="text-xs font-mono font-bold text-yellow-400 uppercase tracking-wider">
               Profil & Institusi
             </h3>
@@ -123,10 +161,17 @@ export default function Footer() {
                 </Link>
               </li>
             </ul>
-          </div>
+          </motion.div>
 
           {/* Col 3: Information & PPDB */}
-          <div className="space-y-3">
+          <motion.div
+            custom={2}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-30px' }}
+            variants={columnVariants}
+            className="space-y-3"
+          >
             <h3 className="text-xs font-mono font-bold text-yellow-400 uppercase tracking-wider">
               Informasi Publik
             </h3>
@@ -156,16 +201,18 @@ export default function Footer() {
                   Peta Lokasi & Kontak
                 </Link>
               </li>
-              <li className="pt-1">
-                <Link to="/admin" className="hover:text-yellow-400 transition-colors inline-flex items-center gap-1.5 text-yellow-400/90 font-semibold text-xs">
-                  Portal Admin CMS <ExternalLink className="w-3 h-3" />
-                </Link>
-              </li>
             </ul>
-          </div>
+          </motion.div>
 
           {/* Col 4: Contact & Location */}
-          <div className="space-y-3">
+          <motion.div
+            custom={3}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-30px' }}
+            variants={columnVariants}
+            className="space-y-3"
+          >
             <h3 className="text-xs font-mono font-bold text-yellow-400 uppercase tracking-wider">
               Sekretariat & Alamat
             </h3>
@@ -187,11 +234,18 @@ export default function Footer() {
                 <span>{settings.operating_hours || 'Senin - Jumat: 07.00 - 15.00 WIB'}</span>
               </li>
             </ul>
-          </div>
+          </motion.div>
         </div>
 
         {/* Bottom Copyright Bar */}
-        <div className="pt-8 border-t border-slate-800 text-xs text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-3">
+        <motion.div
+          custom={4}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-20px' }}
+          variants={columnVariants}
+          className="pt-8 border-t border-slate-800 text-xs text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-3"
+        >
           <p>
             © {new Date().getFullYear()} SMP Pancasila Ponokawan. Seluruh Hak Cipta Dilindungi.
           </p>
@@ -202,7 +256,7 @@ export default function Footer() {
               Supported by XII RPL 2 SMK Krian 1
             </span>
           </div>
-        </div>
+        </motion.div>
       </div>
     </footer>
   );

@@ -28,7 +28,7 @@ export default function GalleryFacilities() {
  <img 
  src={fac.img} 
  alt={fac.title} 
- className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+ className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.025]"
  />
  <div className="absolute inset-0 bg-slate-50 dark:bg-slate-900 opacity-80 group-hover:opacity-100 transition-opacity"></div>
  

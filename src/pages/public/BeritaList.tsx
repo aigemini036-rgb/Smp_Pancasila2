@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, useReducedMotion } from 'motion/react';
 import { getNewsList } from '../../utils/storage';
 import { News } from '../../types';
 import { Newspaper, Search, Calendar, ArrowRight } from 'lucide-react';
+import NewsImageReveal from '../../components/public/NewsImageReveal';
 
 export default function BeritaList() {
   const [news, setNews] = useState<News[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('semua');
   const [searchQuery, setSearchQuery] = useState('');
+  const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
     setNews(getNewsList().filter((n) => n.status === 'published'));
@@ -70,25 +73,40 @@ export default function BeritaList() {
         </div>
       </div>
 
-      {/* News Cards Grid */}
+      {/* News Cards Grid with News Card Stagger */}
       {filtered.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((item) => (
-            <div
+          {filtered.map((item, index) => (
+            <motion.div
               key={item.id}
-              className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.45,
+                delay: shouldReduceMotion ? 0 : Math.min(index * 0.06, 0.36),
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md hover:border-yellow-500/40 dark:hover:border-yellow-500/30 transition-all duration-300 flex flex-col justify-between group"
+              whileHover={
+                shouldReduceMotion
+                  ? undefined
+                  : {
+                      y: -4,
+                      transition: { duration: 0.22, ease: [0.16, 1, 0.3, 1] },
+                    }
+              }
             >
               <div>
-                <div className="aspect-video relative overflow-hidden bg-slate-200 dark:bg-slate-700">
-                  <img
-                    src={item.thumbnail || 'https://picsum.photos/seed/pancasila-news/800/600'}
-                    alt={item.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                  <span className="absolute top-3 left-3 bg-yellow-500 text-slate-900 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase">
+                <NewsImageReveal
+                  src={item.thumbnail || 'https://picsum.photos/seed/pancasila-news/800/600'}
+                  alt={item.title}
+                  aspectRatio="aspect-video"
+                  delay={Math.min(index * 0.06, 0.3)}
+                >
+                  <span className="absolute top-3 left-3 bg-yellow-500 text-slate-900 text-[10px] font-bold px-2.5 py-1 rounded-md uppercase z-10">
                     {item.category}
                   </span>
-                </div>
+                </NewsImageReveal>
                 <div className="p-6 space-y-3">
                   <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
                     <span className="flex items-center gap-1">
@@ -102,7 +120,7 @@ export default function BeritaList() {
                       </>
                     )}
                   </div>
-                  <h3 className="font-extrabold text-slate-900 dark:text-white text-lg leading-snug line-clamp-2">
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-lg leading-snug line-clamp-2 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors duration-200">
                     {item.title}
                   </h3>
                   <p className="text-slate-600 dark:text-slate-400 text-xs leading-relaxed line-clamp-3">
@@ -113,13 +131,13 @@ export default function BeritaList() {
               <div className="px-6 pb-6 pt-0">
                 <Link
                   to={`/berita/${item.slug}`}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-yellow-600 dark:text-yellow-500 hover:text-yellow-700 dark:hover:text-yellow-400 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-yellow-600 dark:text-yellow-500 group-hover:text-yellow-700 dark:group-hover:text-yellow-400 transition-colors duration-200"
                 >
                   <span>Baca Selengkapnya</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 ease-out group-hover:translate-x-1.5" />
                 </Link>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       ) : (

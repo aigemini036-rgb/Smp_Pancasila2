@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { getNewsList } from '../../utils/storage';
 import { ArrowLeft, Calendar, User, Newspaper } from 'lucide-react';
+import NewsImageReveal from '../../components/public/NewsImageReveal';
 
 export default function BeritaDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -59,12 +60,12 @@ export default function BeritaDetail() {
         </div>
       </div>
 
-      {/* Thumbnail */}
-      <div className="aspect-video rounded-3xl overflow-hidden bg-slate-100 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <img
+      {/* 15. NEWS IMAGE REVEAL: Article Featured Image */}
+      <div className="rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm">
+        <NewsImageReveal
           src={article.thumbnail}
           alt={article.title}
-          className="w-full h-full object-cover"
+          aspectRatio="aspect-video"
         />
       </div>
 

@@ -1,18 +1,24 @@
 import React, { useRef } from 'react';
-import { motion, useInView } from 'motion/react';
+import { motion, useInView, useReducedMotion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Person } from '../../types';
-import { Crown, GraduationCap, Briefcase, ArrowRight, BookOpen, Award } from 'lucide-react';
+import { Crown, ArrowRight, BookOpen, Eye } from 'lucide-react';
 
 interface EditorialPortraitCardProps {
   person: Person;
   index: number;
+  onQuickView?: (person: Person) => void;
   key?: React.Key;
 }
 
-export default function EditorialPortraitCard({ person, index }: EditorialPortraitCardProps) {
+export default function EditorialPortraitCard({
+  person,
+  index,
+  onQuickView,
+}: EditorialPortraitCardProps) {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-40px' });
+  const inView = useInView(ref, { once: true, margin: '0px 0px -30px 0px' });
+  const shouldReduceMotion = useReducedMotion();
 
   const isHead = person.category === 'kepala_sekolah';
   const isTeacher = person.category === 'guru';
@@ -20,29 +26,34 @@ export default function EditorialPortraitCard({ person, index }: EditorialPortra
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 28 }}
-      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
+      initial={shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+      animate={inView || shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
       transition={{
-        duration: 0.6,
-        delay: Math.min(index * 0.08, 0.4),
+        duration: shouldReduceMotion ? 0 : 0.35,
+        delay: shouldReduceMotion ? 0 : Math.min(index * 0.05, 0.2),
         ease: [0.16, 1, 0.3, 1],
       }}
-      className="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl hover:border-yellow-500/50 transition-all p-5 flex flex-col justify-between group"
+      className="bg-white dark:bg-slate-800 rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg hover:border-yellow-500/50 hover:-translate-y-0.5 transition-all duration-300 p-5 flex flex-col justify-between group"
     >
       <div className="space-y-4">
         <div className="flex items-start gap-4">
-          {/* Portrait Container with Mask Opening & Zoom */}
-          <div className="relative shrink-0 overflow-hidden rounded-2xl w-20 h-24 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-            <motion.img
-              initial={{ scale: 1.15, opacity: 0 }}
-              animate={inView ? { scale: 1, opacity: 1 } : { scale: 1.15, opacity: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 + Math.min(index * 0.08, 0.4) }}
+          {/* Portrait Container with subtle image hover feedback (scale 1-3%, slight movement, subtle accent & shadow) */}
+          <div
+            onClick={onQuickView ? () => onQuickView(person) : undefined}
+            className={`group/photo relative shrink-0 overflow-hidden rounded-2xl w-20 h-24 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-yellow-500/50 hover:ring-2 hover:ring-yellow-500/20 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 ${
+              onQuickView ? 'cursor-pointer' : ''
+            }`}
+          >
+            <img
               src={person.photo}
               alt={person.name}
-              className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500"
+              loading="lazy"
+              className="w-full h-full object-cover transition-all duration-300 ease-out group-hover/photo:scale-[1.025] group-hover/photo:-translate-y-0.5"
             />
+            {/* Subtle sheen highlight on hover */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-yellow-500/[0.04] to-white/10 opacity-0 group-hover/photo:opacity-100 transition-opacity duration-300 pointer-events-none" />
             {isHead && (
-              <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-yellow-500 text-slate-950 flex items-center justify-center shadow-md">
+              <div className="absolute -top-1 -left-1 w-6 h-6 rounded-full bg-yellow-500 text-slate-950 flex items-center justify-center shadow-md z-10">
                 <Crown className="w-3.5 h-3.5" />
               </div>
             )}
@@ -92,7 +103,18 @@ export default function EditorialPortraitCard({ person, index }: EditorialPortra
       </div>
 
       <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
-        <span className="text-[11px] text-slate-400 font-medium">Status Aktif</span>
+        {onQuickView ? (
+          <button
+            type="button"
+            onClick={() => onQuickView(person)}
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-yellow-600 dark:hover:text-yellow-400 flex items-center gap-1 transition-colors"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Pratinjau</span>
+          </button>
+        ) : (
+          <span className="text-[11px] text-slate-400 font-medium">Status Aktif</span>
+        )}
         <Link
           to={`/personel/${person.slug || person.id}`}
           className="text-xs font-bold text-yellow-600 dark:text-yellow-400 hover:text-yellow-500 flex items-center gap-1 transition-colors"

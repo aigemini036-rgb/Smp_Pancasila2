@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
+import { motion, useReducedMotion } from 'motion/react';
 import { getPeople } from '../../utils/storage';
 import { Network, ArrowRight } from 'lucide-react';
 
 export default function Struktur() {
+  const shouldReduceMotion = useReducedMotion();
   const people = getPeople().filter((p) => p.published && p.status === 'active');
   const headmaster = people.find((p) => p.category === 'kepala_sekolah');
   const teachers = people.filter((p) => p.category === 'guru');
@@ -29,15 +31,22 @@ export default function Struktur() {
         {/* Headmaster Node */}
         {headmaster && (
           <div className="flex flex-col items-center">
-            <div className="bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-lg text-center max-w-sm w-full relative">
+            <motion.div
+              initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-slate-900 text-white p-6 rounded-3xl border border-slate-800 shadow-lg text-center max-w-sm w-full relative"
+            >
               <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-yellow-500 text-slate-900 font-extrabold text-[10px] rounded-full uppercase">
                 Pimpinan Utama
               </span>
-              <img
-                src={headmaster.photo}
-                alt={headmaster.name}
-                className="w-24 h-24 rounded-full object-cover mx-auto mb-3 border-2 border-yellow-500"
-              />
+              <div className="relative mx-auto mb-3 w-24 h-24 rounded-full overflow-hidden border-2 border-yellow-500 shadow-md group/head hover:border-yellow-400 hover:ring-2 hover:ring-yellow-500/30 transition-all duration-300">
+                <img
+                  src={headmaster.photo}
+                  alt={headmaster.name}
+                  className="w-full h-full object-cover transition-all duration-300 ease-out group-hover/head:scale-[1.025] group-hover/head:-translate-y-0.5"
+                />
+              </div>
               <h3 className="font-extrabold text-base text-white">{headmaster.name}</h3>
               <p className="text-xs text-yellow-400 font-semibold">{headmaster.position}</p>
               <p className="text-[11px] text-slate-400 mt-1">{headmaster.education}</p>
@@ -48,7 +57,7 @@ export default function Struktur() {
                 <span>Lihat Profil Detail</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
-            </div>
+            </motion.div>
             {/* Vertical connector line */}
             <div className="w-0.5 h-10 bg-slate-300 dark:bg-slate-700"></div>
           </div>
@@ -60,16 +69,25 @@ export default function Struktur() {
             Dewan Guru & Tenaga Pendidik
           </h3>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {teachers.map((item) => (
-              <div
+            {teachers.map((item, index) => (
+              <motion.div
                 key={item.id}
-                className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4 hover:border-yellow-500 transition-colors"
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.35,
+                  delay: shouldReduceMotion ? 0 : Math.min(index * 0.05, 0.25),
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4 hover:border-yellow-500 transition-colors group"
               >
-                <img
-                  src={item.photo}
-                  alt={item.name}
-                  className="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0"
-                />
+                <div className="relative shrink-0 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 group-hover:border-yellow-500/40 group-hover:ring-1 group-hover:ring-yellow-500/20 shadow-xs group-hover:shadow-md transition-all duration-300">
+                  <img
+                    src={item.photo}
+                    alt={item.name}
+                    className="w-16 h-16 object-cover transition-all duration-300 ease-out group-hover:scale-[1.025] group-hover:-translate-y-0.5"
+                  />
+                </div>
                 <div className="min-w-0 flex-1">
                   <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">
                     {item.name}
@@ -87,7 +105,7 @@ export default function Struktur() {
                     Detail Profil →
                   </Link>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -98,16 +116,25 @@ export default function Struktur() {
             Tata Usaha & Layanan Pendukung
           </h3>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {staff.map((item) => (
-              <div
+            {staff.map((item, index) => (
+              <motion.div
                 key={item.id}
-                className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4 hover:border-yellow-500 transition-colors"
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.35,
+                  delay: shouldReduceMotion ? 0 : Math.min(index * 0.05, 0.25),
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4 hover:border-yellow-500 transition-colors group"
               >
-                <img
-                  src={item.photo}
-                  alt={item.name}
-                  className="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0"
-                />
+                <div className="relative shrink-0 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 group-hover:border-yellow-500/40 group-hover:ring-1 group-hover:ring-yellow-500/20 shadow-xs group-hover:shadow-md transition-all duration-300">
+                  <img
+                    src={item.photo}
+                    alt={item.name}
+                    className="w-16 h-16 object-cover transition-all duration-300 ease-out group-hover:scale-[1.025] group-hover:-translate-y-0.5"
+                  />
+                </div>
                 <div className="min-w-0 flex-1">
                   <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">
                     {item.name}
@@ -125,7 +152,7 @@ export default function Struktur() {
                     Detail Profil →
                   </Link>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, useScroll, useTransform, useSpring, useInView } from 'motion/react';
 
 interface HeadmasterSectionBackgroundProps {
   imageSrc?: string;
@@ -12,17 +12,19 @@ interface HeadmasterSectionBackgroundProps {
 /**
  * HeadmasterSectionBackground
  * 
- * Implements a dynamic, animated cinematic school environment background for the
- * Sambutan Kepala Sekolah section, fed directly from the Admin Panel.
- * 
- * Features:
- * - Dynamic image loading from Admin Panel (with instant fallback to plain card if no image)
- * - Viewport Mask Reveal (triggers when section enters viewport via IntersectionObserver)
- * - Slow, adaptive Ken Burns camera drift (imperceptible, continuous environment feel)
- * - Subtle scroll parallax (0.04x)
- * - Desaturation & contrast balancing with glass vignette overlay ensuring the Principal
- *   portrait remains the primary physical focal point.
- * - Full prefers-reduced-motion support (renders as a static background).
+ * 10. PRINCIPAL BACKGROUND IMAGE MOVEMENT:
+ * - Subtle depth/movement responding gently to page scroll:
+ *   - Background dapat bergeser sedikit (micro Y translation: ±7px)
+ *   - Background dapat memiliki subtle scale (1.00 -> 1.018 -> 1.00)
+ *   - Foreground tetap lebih stabil
+ *   - Movement background jauh lebih kecil daripada gerakan foreground
+ * - Strictly avoids:
+ *   - NO zoom ekstrem (max scale 1.018)
+ *   - NO continuous camera movement (no infinite Ken Burns looping drift)
+ *   - NO aggressive parallax (clean, spring-damped micro offset)
+ *   - NO image distortion (natural aspect ratio, subtle saturation/contrast)
+ * - Text readability preserved via multi-stop high-contrast atmospheric scrims
+ * - Full prefers-reduced-motion support (settles safely into static display)
  */
 export default function HeadmasterSectionBackground({
   imageSrc,
@@ -32,53 +34,46 @@ export default function HeadmasterSectionBackground({
   className = '',
 }: HeadmasterSectionBackgroundProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isInView, setIsInView] = useState(false);
+  const isInView = useInView(containerRef, { margin: '80px 0px' });
   const [hasRevealed, setHasRevealed] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [scrollYOffset, setScrollYOffset] = useState(0);
+
+  // 10. PRINCIPAL BACKGROUND SCROLL KINEMATICS
+  // Drives subtle background depth without re-rendering the component
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start end', 'end start'],
+  });
+
+  const smoothScroll = useSpring(scrollYProgress, {
+    damping: 36,
+    stiffness: 85,
+  });
+
+  // Micro-movement: far smaller than foreground, minimal depth response
+  // - Sedikit bergeser (Y translation: -6.5px to +6.5px)
+  const bgTranslateY = useTransform(smoothScroll, [0, 1], [-6.5, 6.5]);
+  
+  // - Sedikit scale (subtle 1.00 -> 1.018 -> 1.00, no extreme zoom)
+  const bgScale = useTransform(smoothScroll, [0, 0.5, 1], [1.00, 1.018, 1.00]);
 
   useEffect(() => {
-    // 1. Accessibility: Check prefers-reduced-motion
+    // Accessibility: Check prefers-reduced-motion
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     setReducedMotion(mq.matches);
     const motionHandler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
     mq.addEventListener?.('change', motionHandler);
 
-    // 2. Viewport Detection for Mask Reveal
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-          setHasRevealed(true);
-        }
-      },
-      { threshold: 0.15 }
-    );
-
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-
-    // 3. Subtle Parallax (very low intensity to keep background stable)
-    const handleScroll = () => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      if (rect.top < windowHeight && rect.bottom > 0) {
-        // Calculate offset relative to viewport center
-        const offset = (rect.top - windowHeight / 2) * 0.04;
-        setScrollYOffset(offset);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
     return () => {
       mq.removeEventListener?.('change', motionHandler);
-      observer.disconnect();
-      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  useEffect(() => {
+    if (isInView && !hasRevealed) {
+      setHasRevealed(true);
+    }
+  }, [isInView, hasRevealed]);
 
   // Map position prop to CSS object-position
   const getObjectPosition = () => {
@@ -105,8 +100,7 @@ export default function HeadmasterSectionBackground({
     >
       {/* 
         ========================================================================
-        DYNAMIC ANIMATED SCHOOL BACKGROUND LAYER
-        Only rendered if an image is provided in Admin Panel.
+        DYNAMIC SCHOOL BACKGROUND LAYER WITH SCROLL-REACTIVE DEPTH
         ========================================================================
       */}
       {hasValidImage && (
@@ -119,7 +113,7 @@ export default function HeadmasterSectionBackground({
             initial={
               !reducedMotion
                 ? {
-                    clipPath: 'polygon(0% 15%, 100% 0%, 100% 85%, 0% 100%)',
+                    clipPath: 'polygon(0% 12%, 100% 0%, 100% 88%, 0% 100%)',
                     opacity: 0,
                   }
                 : {
@@ -136,35 +130,24 @@ export default function HeadmasterSectionBackground({
                 : {}
             }
             transition={{
-              duration: 1.2,
-              ease: [0.16, 1, 0.3, 1], // Smooth cubic-bezier
+              duration: 1.1,
+              ease: [0.16, 1, 0.3, 1],
             }}
             className="w-full h-full relative"
           >
             {/* 
-              Ken Burns Camera Motion + Subtle Parallax Layer:
-              Very slow, majestic scale (1.00 -> 1.035) and tiny drift
+              10. BACKGROUND DEPTH & MOVEMENT LAYER:
+              - Grounded & calm: NO continuous camera drift/looping
+              - Sedikit translate Y & subtle scale reacting strictly to scroll
+              - Significantly smaller displacement than foreground elements
             */}
             <motion.div
-              animate={
-                !reducedMotion && isInView
-                  ? {
-                      scale: [1, 1.035, 1],
-                      x: ['0%', '-1.2%', '0%'],
-                      y: ['0%', '0.8%', '0%'],
-                    }
-                  : { scale: 1, x: 0, y: 0 }
-              }
-              transition={{
-                duration: 26,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
               style={{
-                transform: !reducedMotion ? `translateY(${scrollYOffset}px)` : 'none',
+                y: reducedMotion ? 0 : bgTranslateY,
+                scale: reducedMotion ? 1 : bgScale,
                 willChange: 'transform',
               }}
-              className="absolute -inset-6 w-[calc(100%+3rem)] h-[calc(100%+3rem)]"
+              className="absolute -inset-4 w-[calc(100%+2rem)] h-[calc(100%+2rem)]"
             >
               <img
                 src={imageSrc}
@@ -173,7 +156,7 @@ export default function HeadmasterSectionBackground({
                 decoding="async"
                 style={{
                   objectPosition: getObjectPosition(),
-                  filter: 'saturate(0.85) contrast(1.05)',
+                  filter: 'saturate(0.85) contrast(1.02)',
                   opacity: opacity,
                 }}
                 className="w-full h-full object-cover transition-opacity duration-700"
@@ -181,22 +164,21 @@ export default function HeadmasterSectionBackground({
             </motion.div>
 
             {/* 
-              Cinematic Multi-Stop Atmospheric Overlays:
-              - Dynamically adapts based on user's selected opacity (25%, 35%, 50%, 75%, 100%)
-              - Preserves crystal-clear text readability on the right and headmaster photo pop
+              ATMOSPHERIC CONTRAST & READABILITY OVERLAYS:
+              Preserves crystal-clear text readability on foreground text and headmaster photo
             */}
             <div
-              className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/75 to-white/90 dark:from-slate-900/90 dark:via-slate-900/75 dark:to-slate-900/90 transition-opacity duration-500"
+              className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/80 to-white/92 dark:from-slate-900/92 dark:via-slate-900/80 dark:to-slate-900/92 transition-opacity duration-500"
               style={{
-                opacity: opacity >= 0.9 ? 0.45 : opacity >= 0.7 ? 0.65 : opacity >= 0.45 ? 0.85 : 0.95,
+                opacity: opacity >= 0.9 ? 0.55 : opacity >= 0.7 ? 0.72 : opacity >= 0.45 ? 0.88 : 0.95,
               }}
               aria-hidden="true"
             />
-            {/* Subtle Top & Bottom Shadow Gradients for Card Edge Depth */}
+            {/* Soft Edge Depth Vignette */}
             <div
-              className="absolute inset-0 bg-gradient-to-b from-white/30 via-transparent to-white/50 dark:from-slate-900/30 dark:via-transparent dark:to-slate-900/50 transition-opacity duration-500"
+              className="absolute inset-0 bg-gradient-to-b from-white/35 via-transparent to-white/55 dark:from-slate-900/35 dark:via-transparent dark:to-slate-900/55 transition-opacity duration-500"
               style={{
-                opacity: opacity >= 0.75 ? 0.5 : 1,
+                opacity: opacity >= 0.75 ? 0.6 : 1,
               }}
               aria-hidden="true"
             />
@@ -206,8 +188,8 @@ export default function HeadmasterSectionBackground({
 
       {/* 
         ========================================================================
-        CONTENT LAYER (Principal Portrait with Hanging Physics + Welcome Text)
-        Kept at z-10 for complete interactivity and focal sharpness.
+        CONTENT LAYER (Foreground Principal Portrait + Welcome Statement)
+        Kept at z-10 for complete interactivity, stability, and maximum sharpness.
         ========================================================================
       */}
       <div className="relative z-10">{children}</div>

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { Person, CategoryPerson } from '../../types';
 import HangingHeadmasterPhoto from './HangingHeadmasterPhoto';
 import {
@@ -16,7 +16,9 @@ import {
   RotateCcw,
   CheckCircle2,
   Quote,
+  Eye,
 } from 'lucide-react';
+import PersonnelProfileModal from './PersonnelProfileModal';
 
 interface InteractivePersonnelGalleryProps {
   people: Person[];
@@ -108,12 +110,17 @@ function isLevenshteinClose(a: string, b: string, maxDistance: number): boolean 
 interface EditorialProfileCardProps {
   person: Person;
   compositionIndex: number;
+  isInitialReveal?: boolean;
+  onQuickView?: (person: Person) => void;
 }
 
 const EditorialProfileCard = React.memo(function EditorialProfileCard({
   person,
   compositionIndex,
+  isInitialReveal = false,
+  onQuickView,
 }: EditorialProfileCardProps) {
+  const shouldReduceMotion = useReducedMotion();
   const isHeadmaster = person.category === 'kepala_sekolah';
   const isTeacher = person.category === 'guru';
 
@@ -125,7 +132,14 @@ const EditorialProfileCard = React.memo(function EditorialProfileCard({
     : 'right-portrait';
 
   return (
-    <div
+    <motion.div
+      initial={isInitialReveal && !shouldReduceMotion ? { opacity: 0, y: 16 } : false}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: shouldReduceMotion ? 0 : 0.35,
+        delay: shouldReduceMotion ? 0 : Math.min(compositionIndex * 0.05, 0.2),
+        ease: [0.16, 1, 0.3, 1],
+      }}
       className={`relative bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 lg:p-10 border transition-all duration-300 shadow-sm hover:shadow-md ${
         isHeadmaster
           ? 'border-yellow-500/50 ring-1 ring-yellow-500/20 bg-gradient-to-br from-yellow-500/[0.04] via-transparent to-amber-500/[0.02]'
@@ -191,14 +205,20 @@ const EditorialProfileCard = React.memo(function EditorialProfileCard({
                 }
               />
             ) : (
-              <div className="relative overflow-hidden rounded-3xl aspect-[4/5] bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-md w-full">
+              <div
+                onClick={onQuickView ? () => onQuickView(person) : undefined}
+                className={`relative group/photo overflow-hidden rounded-3xl aspect-[4/5] bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-md w-full transition-all duration-300 hover:border-yellow-500/50 hover:ring-2 hover:ring-yellow-500/20 hover:shadow-xl hover:-translate-y-0.5 ${
+                  onQuickView ? 'cursor-pointer' : ''
+                }`}
+              >
                 <img
                   src={person.photo}
                   alt={person.name}
                   loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-all duration-300 ease-out group-hover/photo:scale-[1.025] group-hover/photo:-translate-y-0.5"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 via-transparent to-transparent opacity-0 group-hover/photo:opacity-100 transition-opacity pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-yellow-500/[0.04] to-white/10 opacity-0 group-hover/photo:opacity-100 transition-opacity duration-300 pointer-events-none" />
               </div>
             )}
           </div>
@@ -280,10 +300,20 @@ const EditorialProfileCard = React.memo(function EditorialProfileCard({
               <span>Profil Lengkap</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
+            {onQuickView && (
+              <button
+                type="button"
+                onClick={() => onQuickView(person)}
+                className="inline-flex items-center gap-1.5 px-4 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all shadow-xs active:scale-95"
+              >
+                <Eye className="w-3.5 h-3.5 text-yellow-600 dark:text-yellow-400" />
+                <span>Pratinjau Cepat</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 });
 
@@ -294,9 +324,20 @@ export default function InteractivePersonnelGallery({
   searchQuery,
   onSearchChange,
 }: InteractivePersonnelGalleryProps) {
+  const [modalPerson, setModalPerson] = useState<Person | null>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isInitialReveal, setIsInitialReveal] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Trigger brief initial reveal whenever category or search filter changes, then disable to keep virtual scroll blazing fast
+  useEffect(() => {
+    setIsInitialReveal(true);
+    const timer = setTimeout(() => {
+      setIsInitialReveal(false);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [activeCategory, searchQuery]);
 
   // Check prefers-reduced-motion & mobile viewport
   useEffect(() => {
@@ -657,6 +698,8 @@ export default function InteractivePersonnelGallery({
               <EditorialProfileCard
                 person={slot.person}
                 compositionIndex={slot.logicalIndex}
+                isInitialReveal={isInitialReveal}
+                onQuickView={setModalPerson}
               />
             </div>
           ))}
@@ -673,6 +716,8 @@ export default function InteractivePersonnelGallery({
           <EditorialProfileCard
             person={filteredPeople[0]}
             compositionIndex={0}
+            isInitialReveal={isInitialReveal}
+            onQuickView={setModalPerson}
           />
         </div>
       )}
@@ -723,6 +768,13 @@ export default function InteractivePersonnelGallery({
           </div>
         </motion.div>
       )}
+
+      {/* Quick View Personnel Profile Modal */}
+      <PersonnelProfileModal
+        person={modalPerson}
+        isOpen={!!modalPerson}
+        onClose={() => setModalPerson(null)}
+      />
     </div>
   );
 }

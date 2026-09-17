@@ -67,13 +67,13 @@ export default function AtmosphericCloudsBackground() {
         }
 
         .anim-cloud-far {
-          animation: cloudDriftFar 120s linear infinite;
+          animation: cloudDriftFar 150s linear infinite;
         }
         .anim-cloud-mid {
-          animation: cloudDriftMid 75s linear infinite;
+          animation: cloudDriftMid 100s linear infinite;
         }
         .anim-cloud-near {
-          animation: cloudDriftNear 48s linear infinite;
+          animation: cloudDriftNear 70s linear infinite;
         }
 
         .anim-cloud-paused {
