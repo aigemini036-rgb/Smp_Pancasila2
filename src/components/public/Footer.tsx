@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { getSchoolSettings } from '../../utils/storage';
 import AnimatedWaterWaveBackground from './AnimatedWaterWaveBackground';
+import SchoolLogo from '../common/SchoolLogo';
 
 export default function Footer() {
   const settings = getSchoolSettings();
@@ -57,17 +58,11 @@ export default function Footer() {
             className="space-y-4"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-yellow-500 overflow-hidden flex items-center justify-center text-slate-950 shadow-xs">
-                {settings.logo ? (
-                  <img
-                    src={settings.logo}
-                    alt={settings.school_name || 'Logo SMP Pancasila'}
-                    className="w-full h-full object-contain p-1"
-                  />
-                ) : (
-                  <GraduationCap className="w-6 h-6" />
-                )}
-              </div>
+              <SchoolLogo
+                src={settings.logo}
+                alt={settings.school_name || 'Logo SMP Pancasila'}
+                size="md"
+              />
               <div>
                 <span className="text-base font-extrabold tracking-tight text-white block leading-tight">
                   {settings.school_name || 'SMP PANCASILA'}

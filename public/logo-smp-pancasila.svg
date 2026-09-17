@@ -1,0 +1,218 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 520" fill="none" width="100%" height="100%">
+  <defs>
+    <!-- Text Paths -->
+    <!-- Top Arc for SMP PANCASILA -->
+    <path id="arc-smp-pancasila" d="M 115 200 A 165 165 0 0 1 385 200" fill="none" />
+    <!-- Banner Arc for YTP AL-HIDAYAH KRIAN -->
+    <path id="arc-banner" d="M 120 405 Q 250 448 380 405" fill="none" />
+    
+    <!-- Star definition -->
+    <g id="star">
+      <polygon points="0,-12 3.5,-3.5 12,-3.5 5,2 7.5,10.5 0,5.5 -7.5,10.5 -5,2 -12,-3.5 -3.5,-3.5" fill="#facc15" stroke="#ca8a04" stroke-width="0.75" />
+    </g>
+    <g id="star-large">
+      <polygon points="0,-18 5.5,-5.5 18,-5.5 8,3 11.5,16 0,8.5 -11.5,16 -8,3 -18,-5.5 -5.5,-5.5" fill="#facc15" stroke="#b45309" stroke-width="1" />
+    </g>
+
+    <!-- Drop Shadow Filter for realistic depth -->
+    <filter id="emblem-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Group with shadow -->
+  <g filter="url(#emblem-shadow)">
+    <!-- 1. Outer Pentagon / Shield Silhouette -->
+    <!-- Main Green Shield Fill -->
+    <path
+      d="M 250 16
+         C 285 18, 380 48, 438 152
+         L 374 416
+         C 334 464, 290 492, 250 498
+         C 210 492, 166 464, 126 416
+         L 62 152
+         C 120 48, 215 18, 250 16 Z"
+      fill="#5d8138"
+      stroke="#0f172a"
+      stroke-width="12"
+      stroke-linejoin="round"
+      stroke-linecap="round"
+    />
+
+    <!-- Inner White Boundary Line -->
+    <path
+      d="M 250 25
+         C 283 27, 372 55, 427 154
+         L 366 408
+         C 328 452, 287 480, 250 485
+         C 213 480, 172 452, 134 408
+         L 73 154
+         C 128 55, 217 27, 250 25 Z"
+      fill="none"
+      stroke="#ffffff"
+      stroke-width="3"
+      stroke-opacity="0.9"
+    />
+
+    <!-- Subtle inner green border for rich depth -->
+    <path
+      d="M 250 31
+         C 281 33, 366 59, 419 154
+         L 360 402
+         C 324 444, 285 471, 250 476
+         C 215 471, 176 444, 140 402
+         L 81 154
+         C 134 59, 219 33, 250 31 Z"
+      fill="none"
+      stroke="#466329"
+      stroke-width="2"
+    />
+
+    <!-- 2. Arched Upper Text: "SMP PANCASILA" -->
+    <text font-family="'Plus Jakarta Sans', 'Arial Black', sans-serif" font-weight="900" font-size="34" fill="#000000" letter-spacing="4.5">
+      <textPath href="#arc-smp-pancasila" startOffset="50%" text-anchor="middle">
+        SMP PANCASILA
+      </textPath>
+    </text>
+
+    <!-- 3. Central Black Circle with double rings -->
+    <circle cx="250" cy="275" r="132" fill="#090d14" stroke="#ffffff" stroke-width="4.5" />
+    <circle cx="250" cy="275" r="126" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-opacity="0.4" />
+
+    <!-- 4. 9 Golden Stars (Bintang Sembilan) -->
+    <!-- Large Center Star -->
+    <use href="#star-large" x="250" y="172" />
+    <!-- Left 4 Stars -->
+    <use href="#star" x="217" y="178" transform="rotate(-7 217 178)" />
+    <use href="#star" x="187" y="194" transform="rotate(-18 187 194)" />
+    <use href="#star" x="163" y="219" transform="rotate(-30 163 219)" />
+    <use href="#star" x="149" y="250" transform="rotate(-44 149 250)" />
+    <!-- Right 4 Stars -->
+    <use href="#star" x="283" y="178" transform="rotate(7 283 178)" />
+    <use href="#star" x="313" y="194" transform="rotate(18 313 194)" />
+    <use href="#star" x="337" y="219" transform="rotate(30 337 219)" />
+    <use href="#star" x="351" y="250" transform="rotate(44 351 250)" />
+
+    <!-- 5. Golden Flame / Bud (Kuncup / Obor) -->
+    <path
+      d="M 250 200
+         C 262 208, 267 222, 262 236
+         C 257 248, 243 248, 238 236
+         C 233 222, 238 208, 250 200 Z"
+      fill="#facc15"
+      stroke="#b45309"
+      stroke-width="1.5"
+    />
+    <ellipse cx="250" cy="226" rx="5" ry="10" fill="#fef08a" opacity="0.8" />
+
+    <!-- Foliage / 4 Green Wings around bud -->
+    <path
+      d="M 248 238
+         C 232 232, 206 242, 172 236
+         C 192 248, 218 250, 246 248
+         C 248 248, 252 248, 254 248
+         C 282 250, 308 248, 328 236
+         C 294 242, 268 232, 252 238 Z"
+      fill="#567e30"
+      stroke="#ffffff"
+      stroke-width="1.5"
+    />
+    <!-- Leaves details -->
+    <path d="M 200 240 Q 225 244 245 245" stroke="#84cc16" stroke-width="1.2" stroke-linecap="round" fill="none" />
+    <path d="M 300 240 Q 275 244 255 245" stroke="#84cc16" stroke-width="1.2" stroke-linecap="round" fill="none" />
+
+    <!-- 6. Terrestrial Globe (Bola Dunia di Bawah Buku) -->
+    <g transform="translate(250, 350)">
+      <!-- Globe outline -->
+      <path d="M -70 0 A 70 38 0 0 0 70 0 Z" fill="#082f49" stroke="#ffffff" stroke-width="2" />
+      <!-- Latitude lines -->
+      <path d="M -60 12 Q 0 30 60 12" fill="none" stroke="#ffffff" stroke-width="1.5" />
+      <path d="M -45 24 Q 0 40 45 24" fill="none" stroke="#ffffff" stroke-width="1.5" />
+      <!-- Longitude curves -->
+      <path d="M 0 0 L 0 38" fill="none" stroke="#ffffff" stroke-width="1.5" />
+      <path d="M -30 0 Q -24 22 0 38" fill="none" stroke="#ffffff" stroke-width="1.5" />
+      <path d="M 30 0 Q 24 22 0 38" fill="none" stroke="#ffffff" stroke-width="1.5" />
+      <path d="M -52 0 Q -42 18 0 38" fill="none" stroke="#ffffff" stroke-width="1.5" />
+      <path d="M 52 0 Q 42 18 0 38" fill="none" stroke="#ffffff" stroke-width="1.5" />
+    </g>
+
+    <!-- 7. Open Book (Buku Terbuka / Kitab Suci) -->
+    <!-- Outer Book Contour -->
+    <path
+      d="M 250 268
+         C 220 260, 180 264, 150 274
+         L 146 322
+         C 180 310, 220 308, 250 318
+         C 280 308, 320 310, 354 322
+         L 350 274
+         C 320 264, 280 260, 250 268 Z"
+      fill="#ffffff"
+      stroke="#0f172a"
+      stroke-width="3"
+      stroke-linejoin="round"
+    />
+    <!-- Center Spine -->
+    <line x1="250" y1="268" x2="250" y2="318" stroke="#0f172a" stroke-width="2.5" />
+
+    <!-- Ruled text lines on Left Page -->
+    <path d="M 162 281 C 190 273, 218 272, 242 276" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" fill="none" />
+    <path d="M 160 289 C 190 281, 218 280, 242 284" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" fill="none" />
+    <path d="M 158 297 C 190 289, 218 288, 242 292" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" fill="none" />
+    <path d="M 156 305 C 190 297, 218 296, 242 300" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" fill="none" />
+    <path d="M 154 313 C 190 305, 218 304, 242 308" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" fill="none" />
+
+    <!-- Ruled text lines on Right Page -->
+    <path d="M 258 276 C 282 272, 310 273, 338 281" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" fill="none" />
+    <path d="M 258 284 C 282 280, 310 281, 340 289" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" fill="none" />
+    <path d="M 258 292 C 282 288, 310 289, 342 297" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" fill="none" />
+    <path d="M 258 300 C 282 296, 310 297, 344 305" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" fill="none" />
+    <path d="M 258 308 C 282 304, 310 305, 346 313" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" fill="none" />
+
+    <!-- 8. Golden Ribbon / Banner (Pita Kuning Melengkung) -->
+    <!-- Swallowtail Left Tail Back -->
+    <path d="M 80 274 L 115 320 L 78 355 L 60 315 L 75 315 Z" fill="#ca8a04" stroke="#000000" stroke-width="3" stroke-linejoin="round" />
+    <!-- Swallowtail Left Tail Front Ribbon Fold -->
+    <path d="M 80 274 L 115 320 L 112 376 L 78 355 L 94 316 Z" fill="#eab308" stroke="#000000" stroke-width="3" stroke-linejoin="round" />
+    
+    <!-- Swallowtail Right Tail Back -->
+    <path d="M 420 274 L 385 320 L 422 355 L 440 315 L 425 315 Z" fill="#ca8a04" stroke="#000000" stroke-width="3" stroke-linejoin="round" />
+    <!-- Swallowtail Right Tail Front Ribbon Fold -->
+    <path d="M 420 274 L 385 320 L 388 376 L 422 355 L 406 316 Z" fill="#eab308" stroke="#000000" stroke-width="3" stroke-linejoin="round" />
+
+    <!-- Main Yellow Curved Ribbon Body -->
+    <path
+      d="M 108 340
+         C 150 380, 200 404, 250 404
+         C 300 404, 350 380, 392 340
+         L 416 388
+         C 368 440, 310 466, 250 466
+         C 190 466, 132 440, 84 388
+         Z"
+      fill="#facc15"
+      stroke="#000000"
+      stroke-width="5"
+      stroke-linejoin="round"
+    />
+
+    <!-- Ribbon inner boundary line for crisp definition -->
+    <path
+      d="M 116 348
+         C 155 384, 202 406, 250 406
+         C 298 406, 345 384, 384 348
+         L 404 388
+         C 360 432, 306 456, 250 456
+         C 194 456, 140 432, 96 388
+         Z"
+      fill="none"
+      stroke="#eab308"
+      stroke-width="2"
+    />
+
+    <!-- Ribbon Text: "YTP AL-HIDAYAH KRIAN" -->
+    <text font-family="'Plus Jakarta Sans', 'Arial Black', sans-serif" font-weight="900" font-size="22" fill="#000000" letter-spacing="2">
+      <textPath href="#arc-banner" startOffset="50%" text-anchor="middle">
+        YTP AL-HIDAYAH KRIAN
+      </textPath>
+    </text>
+  </g>
+</svg>

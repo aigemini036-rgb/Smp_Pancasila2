@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { loginAdmin, getAuthenticatedUser } from '../../utils/auth';
 import { GraduationCap, Lock, Mail, AlertCircle, ArrowLeft } from 'lucide-react';
+import SchoolLogo from '../../components/common/SchoolLogo';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -45,9 +46,9 @@ export default function Login() {
         </Link>
 
         {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-yellow-500 flex items-center justify-center text-slate-900 mx-auto font-black shadow-lg">
-            <GraduationCap className="w-8 h-8" />
+        <div className="text-center space-y-3">
+          <div className="flex justify-center">
+            <SchoolLogo size="lg" />
           </div>
           <h1 className="text-2xl font-black text-white tracking-tight">
             Login Admin CMS

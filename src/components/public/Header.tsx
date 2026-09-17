@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { getSchoolSettings, getAnnouncements } from '../../utils/storage';
 import AnnouncementTransition from './AnnouncementTransition';
+import SchoolLogo from '../common/SchoolLogo';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -143,17 +144,11 @@ export default function Header() {
         >
           {/* School Brand Identity */}
           <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-11 h-11 bg-yellow-400 rounded-xl p-1 shadow-sm flex items-center justify-center shrink-0 border border-yellow-500/40 transition-transform group-hover:scale-105">
-              {settings.logo ? (
-                <img
-                  src={settings.logo}
-                  alt={settings.school_name || 'SMP Pancasila Ponokawan'}
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <GraduationCap className="w-6 h-6 text-slate-950" />
-              )}
-            </div>
+            <SchoolLogo
+              src={settings.logo}
+              alt={settings.school_name || 'SMP Pancasila Ponokawan'}
+              size="md"
+            />
             <div className="flex flex-col">
               <span className="font-extrabold text-slate-950 text-base sm:text-lg tracking-tight leading-tight">
                 {settings.school_name || 'SMP Pancasila Ponokawan'}

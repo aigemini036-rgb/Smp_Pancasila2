@@ -27,6 +27,7 @@ import {
 import { getAuthenticatedUser, logoutAdmin } from '../utils/auth';
 import { getSchoolSettings } from '../utils/storage';
 import { usePermission, Permission } from '../utils/permissions';
+import SchoolLogo from '../components/common/SchoolLogo';
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -85,20 +86,14 @@ export default function AdminLayout() {
       >
         {/* Brand Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-yellow-500 overflow-hidden flex items-center justify-center text-slate-900 font-bold">
-              {settings.logo ? (
-                <img
-                  src={settings.logo}
-                  alt={settings.school_name || 'Logo'}
-                  className="w-full h-full object-contain p-0.5"
-                />
-              ) : (
-                <GraduationCap className="w-5 h-5" />
-              )}
-            </div>
+          <Link to="/" className="flex items-center gap-3 group">
+            <SchoolLogo
+              src={settings.logo}
+              alt={settings.school_name || 'Logo SMP Pancasila'}
+              size="sm"
+            />
             <div>
-              <span className="text-sm font-extrabold text-white block leading-tight tracking-wider">
+              <span className="text-sm font-extrabold text-white block leading-tight tracking-wider group-hover:text-yellow-400 transition-colors">
                 PANEL ADMIN
               </span>
               <span className="text-[10px] text-yellow-500 uppercase font-semibold">

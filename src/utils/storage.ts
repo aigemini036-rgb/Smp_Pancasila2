@@ -28,7 +28,7 @@ const KEYS = {
 export const defaultSchoolSettings: SchoolSettings = {
   id: 'set-001',
   school_name: 'SMP Pancasila Ponokawan',
-  logo: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&w=300&q=80',
+  logo: '/logo-smp-pancasila.png',
   address: 'Jl. Raya Ponokawan No. 45, Desa Ponokawan, Kec. Krian, Kabupaten Sidoarjo, Jawa Timur 61262',
   phone: '(031) 8971234 / 0812-3456-7890',
   email: 'info@smppancasilaponokawan.sch.id',
@@ -606,6 +606,10 @@ export function getSchoolSettings(): SchoolSettings {
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
+      // Migrate legacy unsplash placeholder to official logo
+      if (!parsed.logo || parsed.logo.includes('images.unsplash.com/photo-1546410531-bb4caa6b424d')) {
+        parsed.logo = defaultSchoolSettings.logo;
+      }
       return { ...defaultSchoolSettings, ...parsed };
     } catch { /* ignore */ }
   }
