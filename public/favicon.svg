@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <rect width="64" height="64" rx="14" fill="#0b0f19"/>
+  <path d="M32 6L53 14V33C53 45.5 43.5 55.5 32 59C20.5 55.5 11 45.5 11 33V14L32 6Z" fill="#151d2f" stroke="#eab308" stroke-width="2.5" stroke-linejoin="round"/>
+  <!-- Pancasila / Education Gold Star & Book motif -->
+  <path d="M32 16L34.8 22.8L42 23.5L36.6 28.3L38.2 35.4L32 31.8L25.8 35.4L27.4 28.3L22 23.5L29.2 22.8L32 16Z" fill="#facc15"/>
+  <path d="M20 42C24 40.5 28 41 32 43C36 41 40 40.5 44 42" stroke="#eab308" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M20 46C24 44.5 28 45 32 47C36 45 40 44.5 44 46" stroke="#ca8a04" stroke-width="2" stroke-linecap="round"/>
+</svg>
