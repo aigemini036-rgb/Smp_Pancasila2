@@ -13,6 +13,7 @@ import {
   Crown,
   ExternalLink,
   CheckCircle2,
+  Globe,
 } from 'lucide-react';
 
 export interface PersonnelProfileModalProps {
@@ -207,6 +208,33 @@ export default function PersonnelProfileModal({
                     <span>Aktif Bertugas di SMP Pancasila</span>
                   </span>
                 </div>
+
+                {person.website && (
+                  <div className="p-3 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 sm:col-span-2 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
+                        <Globe className="w-3.5 h-3.5" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase block">
+                          Website & Blog Pribadi {person.category === 'guru' ? 'Guru' : 'Personel'}
+                        </span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block text-xs">
+                          {person.website.replace(/^https?:\/\//i, '').replace(/\/$/, '')}
+                        </span>
+                      </div>
+                    </div>
+                    <a
+                      href={person.website.startsWith('http') ? person.website : `https://${person.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shrink-0 transition-colors shadow-xs"
+                    >
+                      <span>Buka Web</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                )}
               </div>
 
               {/* Achievements (if any) */}
@@ -236,7 +264,7 @@ export default function PersonnelProfileModal({
             </div>
 
             {/* Modal Footer Actions */}
-            <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-900/75 shrink-0 flex items-center justify-between">
+            <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/75 dark:bg-slate-900/75 shrink-0 flex items-center justify-between gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={onClose}
@@ -245,14 +273,30 @@ export default function PersonnelProfileModal({
                 Tutup
               </button>
 
-              <Link
-                to={`/personel/${person.slug || person.id}`}
-                onClick={onClose}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-bold shadow-sm hover:shadow-md transition-all active:scale-95"
-              >
-                <span>Halaman Profil Lengkap</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </Link>
+              <div className="flex items-center gap-2">
+                {person.website && (
+                  <a
+                    href={person.website.startsWith('http') ? person.website : `https://${person.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-xs font-bold shadow-xs transition-all active:scale-95"
+                    title={`Kunjungi Website ${person.name}`}
+                  >
+                    <Globe className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <span>Website {person.category === 'guru' ? 'Guru' : 'Personel'}</span>
+                    <ExternalLink className="w-3 h-3 opacity-70" />
+                  </a>
+                )}
+
+                <Link
+                  to={`/personel/${person.slug || person.id}`}
+                  onClick={onClose}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-bold shadow-sm hover:shadow-md transition-all active:scale-95"
+                >
+                  <span>Halaman Profil Lengkap</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </div>
           </motion.div>
         </div>

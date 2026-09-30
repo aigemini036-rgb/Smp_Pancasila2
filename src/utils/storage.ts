@@ -79,6 +79,7 @@ export const defaultPeople: Person[] = [
     work_history: 'Guru Matematika (1994-2010) | Wakasek Kurikulum (2010-2018) | Kepala Sekolah SMP Pancasila Ponokawan (2018-Sekarang)',
     short_bio: 'Berpengalaman lebih dari 28 tahun memimpin tata kelola sekolah, berdedikasi membangun iklim sekolah islami, inklusif, berprestasi, dan ramah anak.',
     contact: 'kepala.sekolah@smppancasilaponokawan.sch.id',
+    website: 'https://bambangsugierto.sch.id',
     status: 'active',
     published: true,
     created_at: new Date().toISOString(),
@@ -98,6 +99,7 @@ export const defaultPeople: Person[] = [
     work_history: 'Pengajar Bahasa Indonesia SMP Pancasila Ponokawan (1998-Sekarang)',
     short_bio: 'Aktif mendampingi kegiatan OSIS, gerakan literasi sekolah, serta pembinaan lomba debat dan cipta puisi tingkat kabupaten.',
     contact: 'siti.rahmah@smppancasilaponokawan.sch.id',
+    website: 'https://sitirahmah-literasi.blogspot.com',
     status: 'active',
     published: true,
     created_at: new Date().toISOString(),
@@ -117,6 +119,7 @@ export const defaultPeople: Person[] = [
     work_history: 'Guru Matematika SMP Pancasila Ponokawan (2010-Sekarang)',
     short_bio: 'Pengajar matematika dengan metode numerasi interaktif dan pelatih regu Pramuka Penggalang prestasi.',
     contact: 'ahmad.kholis@smppancasilaponokawan.sch.id',
+    website: 'https://ahmadkholis-matematika.my.id',
     status: 'active',
     published: true,
     created_at: new Date().toISOString(),
@@ -136,6 +139,7 @@ export const defaultPeople: Person[] = [
     work_history: 'Pengajar TIK & Kepala Lab Komputer SMP Pancasila (2015-Sekarang)',
     short_bio: 'Mendorong siswa mahir koding dasar, desain grafis, dan pemanfaatan AI yang bijak untuk pembelajaran.',
     contact: 'maya.indriani@smppancasilaponokawan.sch.id',
+    website: 'https://mayaindriani-tik.web.id',
     status: 'active',
     published: true,
     created_at: new Date().toISOString(),
@@ -628,7 +632,24 @@ export function saveSchoolSettings(settings: SchoolSettings): SchoolSettings {
 export function getPeople(): Person[] {
   const stored = localStorage.getItem(KEYS.PEOPLE);
   if (stored) {
-    try { return JSON.parse(stored); } catch { /* ignore */ }
+    try {
+      const parsed: Person[] = JSON.parse(stored);
+      let hasUpdate = false;
+      const merged = parsed.map((p) => {
+        if (!p.website) {
+          const match = defaultPeople.find((dp) => dp.id === p.id);
+          if (match?.website) {
+            hasUpdate = true;
+            return { ...p, website: match.website };
+          }
+        }
+        return p;
+      });
+      if (hasUpdate) {
+        localStorage.setItem(KEYS.PEOPLE, JSON.stringify(merged));
+      }
+      return merged;
+    } catch { /* ignore */ }
   }
   localStorage.setItem(KEYS.PEOPLE, JSON.stringify(defaultPeople));
   return defaultPeople;

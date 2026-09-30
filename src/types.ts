@@ -67,6 +67,7 @@ export interface Person {
   work_history: string;
   short_bio: string;
   contact?: string;
+  website?: string;
   achievements_note?: string;
   status: PersonStatus;
   published: boolean;

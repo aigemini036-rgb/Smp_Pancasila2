@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { getPeople, savePerson, deletePerson } from '../../utils/storage';
 import { Person, CategoryPerson } from '../../types';
 import { usePermission, Permission } from '../../utils/permissions';
-import { Users, Plus, Edit2, Trash2, Check, X, Search } from 'lucide-react';
+import { Users, Plus, Edit2, Trash2, Check, X, Search, Globe, Mail, ExternalLink } from 'lucide-react';
 import ImageUpload from '../../components/admin/ImageUpload';
 
 export default function PersonelManager() {
@@ -40,6 +40,7 @@ export default function PersonelManager() {
       work_history: '',
       short_bio: '',
       contact: '',
+      website: '',
       published: true,
       status: 'active',
     });
@@ -83,6 +84,7 @@ export default function PersonelManager() {
       short_bio: editingPerson.short_bio || '',
       achievements_note: editingPerson.achievements_note || '',
       contact: editingPerson.contact || '',
+      website: editingPerson.website?.trim() || '',
       published: editingPerson.published ?? true,
       status: editingPerson.status || 'active',
       slug,
@@ -212,6 +214,19 @@ export default function PersonelManager() {
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white text-sm">{person.name}</p>
                       <p className="text-[11px] text-slate-400">{person.nip_nuptk || 'NIP: -'}</p>
+                      {person.website && (
+                        <a
+                          href={person.website.startsWith('http') ? person.website : `https://${person.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline mt-0.5"
+                          title={`Kunjungi website: ${person.website}`}
+                        >
+                          <Globe className="w-3 h-3" />
+                          <span>Web Guru</span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      )}
                     </div>
                   </td>
                   <td className="p-4">
@@ -413,6 +428,42 @@ export default function PersonelManager() {
                   placeholder="Guru SMP Pancasila (2000 - Sekarang) | Wakasek Kurikulum (2015-2020)"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-yellow-500"
                 />
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                    <Globe className="w-4 h-4 text-blue-500" />
+                    <span>Website / Blog Pribadi Guru (Opsional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={editingPerson.website || ''}
+                    onChange={(e) => setEditingPerson({ ...editingPerson, website: e.target.value })}
+                    placeholder="https://namaguru.my.id atau https://namaguru.blogspot.com"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-yellow-500 text-xs"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Link menuju website pribadi, blog materi pelajaran, atau portofolio guru.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                    <Mail className="w-4 h-4 text-yellow-500" />
+                    <span>Email / Kontak Personel (Opsional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={editingPerson.contact || ''}
+                    onChange={(e) => setEditingPerson({ ...editingPerson, contact: e.target.value })}
+                    placeholder="nama.guru@smppancasilaponokawan.sch.id"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-yellow-500 text-xs"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">
+                    Alamat email resmi atau kontak untuk korespondensi wali murid/siswa.
+                  </p>
+                </div>
               </div>
 
               <div>

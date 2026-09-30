@@ -17,6 +17,8 @@ import {
   CheckCircle2,
   Quote,
   Eye,
+  Globe,
+  ExternalLink,
 } from 'lucide-react';
 import PersonnelProfileModal from './PersonnelProfileModal';
 
@@ -74,7 +76,10 @@ function calculateRelevanceScore(person: Person, query: string): number {
   // 7. Bio match
   if (bio.includes(q)) return 200;
 
-  // 8. Fuzzy / Levenshtein approximate match on name
+  // 8. Website link match
+  if ((person.website || '').toLowerCase().includes(q)) return 150;
+
+  // 9. Fuzzy / Levenshtein approximate match on name
   const isFuzzyClose = nameWords.some((w) =>
     qTokens.some((token) => isLevenshteinClose(w, token, 1))
   );
@@ -300,6 +305,21 @@ const EditorialProfileCard = React.memo(function EditorialProfileCard({
               <span>Profil Lengkap</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
+
+            {person.website && (
+              <a
+                href={person.website.startsWith('http') ? person.website : `https://${person.website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-3 rounded-2xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-xs font-bold transition-all shadow-xs active:scale-95 group"
+                title={`Kunjungi Website ${person.name}`}
+              >
+                <Globe className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 group-hover:rotate-12 transition-transform" />
+                <span>Website {person.category === 'guru' ? 'Guru' : 'Pribadi'}</span>
+                <ExternalLink className="w-3 h-3 opacity-70" />
+              </a>
+            )}
+
             {onQuickView && (
               <button
                 type="button"

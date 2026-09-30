@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { motion, useInView, useReducedMotion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { Person } from '../../types';
-import { Crown, ArrowRight, BookOpen, Eye } from 'lucide-react';
+import { Crown, ArrowRight, BookOpen, Eye, Globe, ExternalLink } from 'lucide-react';
 
 interface EditorialPortraitCardProps {
   person: Person;
@@ -102,19 +102,35 @@ export default function EditorialPortraitCard({
         </div>
       </div>
 
-      <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
-        {onQuickView ? (
-          <button
-            type="button"
-            onClick={() => onQuickView(person)}
-            className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-yellow-600 dark:hover:text-yellow-400 flex items-center gap-1 transition-colors"
-          >
-            <Eye className="w-3.5 h-3.5" />
-            <span>Pratinjau</span>
-          </button>
-        ) : (
-          <span className="text-[11px] text-slate-400 font-medium">Status Aktif</span>
-        )}
+      <div className="pt-4 mt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-3">
+          {onQuickView ? (
+            <button
+              type="button"
+              onClick={() => onQuickView(person)}
+              className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-yellow-600 dark:hover:text-yellow-400 flex items-center gap-1 transition-colors"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>Pratinjau</span>
+            </button>
+          ) : (
+            <span className="text-[11px] text-slate-400 font-medium">Status Aktif</span>
+          )}
+
+          {person.website && (
+            <a
+              href={person.website.startsWith('http') ? person.website : `https://${person.website}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-500 transition-colors"
+              title={`Kunjungi Website ${person.name}`}
+            >
+              <Globe className="w-3 h-3" />
+              <span>Web Guru</span>
+            </a>
+          )}
+        </div>
+
         <Link
           to={`/personel/${person.slug || person.id}`}
           className="text-xs font-bold text-yellow-600 dark:text-yellow-400 hover:text-yellow-500 flex items-center gap-1 transition-colors"
