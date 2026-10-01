@@ -31,7 +31,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative overflow-hidden bg-slate-900 text-slate-300 pt-16 pb-8 border-t border-slate-800">
+    <footer className="relative overflow-hidden bg-slate-900 text-slate-300 pt-16 pb-28 sm:pb-24 lg:pb-16 border-t border-slate-800">
       {/* 
         ========================================================================
         39 & 40: ANIMATED WATER WAVE & MULTI-LAYER DEPTH
@@ -232,23 +232,31 @@ export default function Footer() {
           </motion.div>
         </div>
 
-        {/* Bottom Copyright Bar */}
+        {/* Bottom Copyright Bar with safe right-padding margin against floating WhatsApp CTA */}
         <motion.div
           custom={4}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-20px' }}
           variants={columnVariants}
-          className="pt-8 border-t border-slate-800 text-xs text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-3"
+          className="pt-8 border-t border-slate-800 text-xs text-slate-400 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left pr-0 lg:pr-56"
         >
-          <p>
-            © {new Date().getFullYear()} SMP Pancasila Ponokawan. Seluruh Hak Cipta Dilindungi.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-xs text-slate-400">
-            <span>Situs Resmi Informasi & Pembelajaran</span>
-            <span className="hidden sm:inline text-slate-600">•</span>
-            <span id="footer-support-credit" className="text-slate-300 font-medium">
-              Supported by XII RPL 2 SMK Krian 1
+          <div className="space-y-1">
+            <p>
+              © {new Date().getFullYear()} SMP Pancasila Ponokawan. Seluruh Hak Cipta Dilindungi.
+            </p>
+            <p className="text-[11px] text-slate-500">
+              Situs Resmi Informasi, Pengumuman & Pembelajaran Terpadu.
+            </p>
+          </div>
+
+          <div
+            id="footer-support-credit"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/90 border border-slate-700/80 text-slate-300 text-xs font-medium shadow-xs hover:border-yellow-500/40 transition-colors"
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0 shadow-xs shadow-emerald-400/50" />
+            <span>
+              Supported by <strong className="text-white font-bold">XII RPL 2 SMK Krian 1</strong>
             </span>
           </div>
         </motion.div>
