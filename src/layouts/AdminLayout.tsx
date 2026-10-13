@@ -23,6 +23,7 @@ import {
   Globe,
   ArrowRight,
   ExternalLink,
+  Database,
 } from 'lucide-react';
 import { getAuthenticatedUser, logoutAdmin } from '../utils/auth';
 import { getSchoolSettings } from '../utils/storage';
@@ -354,6 +355,29 @@ export default function AdminLayout() {
             >
               <Settings className="w-4 h-4 shrink-0" />
               <span>Pengaturan Website</span>
+            </NavLink>
+          )}
+
+          {/* Database Supabase */}
+          {can(Permission.VIEW_SETTINGS) && (
+            <NavLink
+              to="/admin/supabase"
+              onClick={() => setSidebarOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors ${
+                  isActive
+                    ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-600/30'
+                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`
+              }
+            >
+              <Database className="w-4 h-4 shrink-0 text-emerald-400" />
+              <div className="flex items-center justify-between flex-1">
+                <span>Database Supabase</span>
+                <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold">
+                  Postgres
+                </span>
+              </div>
             </NavLink>
           )}
 

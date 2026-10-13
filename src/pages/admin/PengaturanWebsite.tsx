@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { getSchoolSettings, saveSchoolSettings, exportAllSchoolData, importAllSchoolData, resetAllToDefaults } from '../../utils/storage';
 import { SchoolSettings } from '../../types';
 import { usePermission, Permission } from '../../utils/permissions';
@@ -18,6 +19,8 @@ import {
   FileText,
   Shield,
   Layers,
+  Database,
+  ArrowRight,
 } from 'lucide-react';
 import ImageUpload from '../../components/admin/ImageUpload';
 
@@ -580,6 +583,30 @@ export default function PengaturanWebsite() {
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Simpan seluruh data artikel berita, data guru & staf, galeri, prestasi, fasilitas, dan pengaturan dalam satu file JSON untuk keamanan data.
               </p>
+            </div>
+
+            {/* Supabase Integration Callout */}
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-teal-500/10 border border-emerald-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                    Integrasi Database Cloud Supabase
+                  </h3>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Hubungkan website ini ke database PostgreSQL Supabase untuk sinkronisasi cloud online multi-admin real-time.
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/admin/supabase"
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap shrink-0"
+              >
+                <span>Buka Pengaturan Supabase</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-6">

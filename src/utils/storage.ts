@@ -10,6 +10,40 @@ import {
   MediaFile,
 } from '../types';
 import { assertPermission, Permission } from './permissions';
+import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
+
+// Helper to asynchronously replicate mutations to Supabase in the background
+async function asyncSupabaseUpsert(table: string, data: any) {
+  if (isSupabaseConfigured()) {
+    try {
+      const client = getSupabase();
+      if (client) {
+        const { error } = await client.from(table).upsert(data, { onConflict: 'id' });
+        if (error) {
+          console.warn(`[Supabase Replicate] Gagal sync ke tabel ${table}:`, error.message);
+        }
+      }
+    } catch (e) {
+      console.warn(`[Supabase Replicate] Exception in ${table}:`, e);
+    }
+  }
+}
+
+async function asyncSupabaseDelete(table: string, id: string) {
+  if (isSupabaseConfigured()) {
+    try {
+      const client = getSupabase();
+      if (client) {
+        const { error } = await client.from(table).delete().eq('id', id);
+        if (error) {
+          console.warn(`[Supabase Replicate] Gagal hapus dari ${table}:`, error.message);
+        }
+      }
+    } catch (e) {
+      console.warn(`[Supabase Replicate] Exception deleting ${table}:`, e);
+    }
+  }
+}
 
 // STORAGE KEYS
 const KEYS = {
@@ -625,6 +659,7 @@ export function saveSchoolSettings(settings: SchoolSettings): SchoolSettings {
   assertPermission(Permission.MANAGE_SCHOOL_DATA, 'Menyimpan Pengaturan Sekolah');
   const updated = { ...settings, updated_at: new Date().toISOString() };
   localStorage.setItem(KEYS.SETTINGS, JSON.stringify(updated));
+  asyncSupabaseUpsert('school_settings', updated);
   return updated;
 }
 
@@ -664,12 +699,18 @@ export function savePerson(person: Person): void {
   assertPermission(Permission.MANAGE_PERSONNEL, 'Menyimpan Profil Personel');
   const current = getPeople();
   const index = current.findIndex((p) => p.id === person.id);
+  const toSave = {
+    ...person,
+    updated_at: new Date().toISOString(),
+    created_at: person.created_at || new Date().toISOString(),
+  };
   if (index >= 0) {
-    current[index] = { ...person, updated_at: new Date().toISOString() };
+    current[index] = toSave;
   } else {
-    current.unshift({ ...person, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+    current.unshift(toSave);
   }
   savePeople(current);
+  asyncSupabaseUpsert('people', toSave);
 }
 
 export function deletePerson(id: string): void {
@@ -677,6 +718,7 @@ export function deletePerson(id: string): void {
   const current = getPeople();
   const filtered = current.filter((p) => p.id !== id);
   savePeople(filtered);
+  asyncSupabaseDelete('people', id);
 }
 
 // News
@@ -698,12 +740,18 @@ export function saveNews(newsItem: News): void {
   assertPermission(Permission.MANAGE_NEWS, 'Menyimpan Artikel Berita');
   const current = getNewsList();
   const index = current.findIndex((n) => n.id === newsItem.id);
+  const toSave = {
+    ...newsItem,
+    updated_at: new Date().toISOString(),
+    created_at: newsItem.created_at || new Date().toISOString(),
+  };
   if (index >= 0) {
-    current[index] = { ...newsItem, updated_at: new Date().toISOString() };
+    current[index] = toSave;
   } else {
-    current.unshift({ ...newsItem, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+    current.unshift(toSave);
   }
   saveNewsList(current);
+  asyncSupabaseUpsert('news', toSave);
 }
 
 export function deleteNews(id: string): void {
@@ -711,6 +759,7 @@ export function deleteNews(id: string): void {
   const current = getNewsList();
   const filtered = current.filter((n) => n.id !== id);
   saveNewsList(filtered);
+  asyncSupabaseDelete('news', id);
 }
 
 
@@ -763,18 +812,25 @@ export function saveAnnouncement(announcement: Announcement): void {
   assertPermission(Permission.MANAGE_ANNOUNCEMENTS, 'Menyimpan Data Pengumuman');
   const current = getAnnouncements();
   const index = current.findIndex((a) => a.id === announcement.id);
+  const toSave = {
+    ...announcement,
+    updated_at: new Date().toISOString(),
+    created_at: announcement.created_at || new Date().toISOString(),
+  };
   if (index >= 0) {
-    current[index] = { ...announcement, updated_at: new Date().toISOString() };
+    current[index] = toSave;
   } else {
-    current.unshift({ ...announcement, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+    current.unshift(toSave);
   }
   saveAnnouncements(current);
+  asyncSupabaseUpsert('announcements', toSave);
 }
 
 export function deleteAnnouncement(id: string): void {
   assertPermission(Permission.MANAGE_ANNOUNCEMENTS, 'Menghapus Pengumuman');
   const current = getAnnouncements();
   saveAnnouncements(current.filter((a) => a.id !== id));
+  asyncSupabaseDelete('announcements', id);
 }
 
 // Achievements
@@ -806,18 +862,25 @@ export function saveAchievement(achievement: Achievement): void {
   assertPermission(Permission.MANAGE_ACHIEVEMENTS, 'Menyimpan Data Prestasi');
   const current = getAchievements();
   const index = current.findIndex((a) => a.id === achievement.id);
+  const toSave = {
+    ...achievement,
+    updated_at: new Date().toISOString(),
+    created_at: achievement.created_at || new Date().toISOString(),
+  };
   if (index >= 0) {
-    current[index] = { ...achievement, updated_at: new Date().toISOString() };
+    current[index] = toSave;
   } else {
-    current.unshift({ ...achievement, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+    current.unshift(toSave);
   }
   saveAchievements(current);
+  asyncSupabaseUpsert('achievements', toSave);
 }
 
 export function deleteAchievement(id: string): void {
   assertPermission(Permission.MANAGE_ACHIEVEMENTS, 'Menghapus Prestasi');
   const current = getAchievements();
   saveAchievements(current.filter((a) => a.id !== id));
+  asyncSupabaseDelete('achievements', id);
 }
 
 
@@ -842,18 +905,25 @@ export function saveGallery(gallery: Gallery): void {
   assertPermission(Permission.MANAGE_GALLERIES, 'Menyimpan Data Galeri');
   const current = getGalleries();
   const index = current.findIndex((g) => g.id === gallery.id);
+  const toSave = {
+    ...gallery,
+    updated_at: new Date().toISOString(),
+    created_at: gallery.created_at || new Date().toISOString(),
+  };
   if (index >= 0) {
-    current[index] = { ...gallery, updated_at: new Date().toISOString() };
+    current[index] = toSave;
   } else {
-    current.unshift({ ...gallery, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+    current.unshift(toSave);
   }
   saveGalleries(current);
+  asyncSupabaseUpsert('galleries', toSave);
 }
 
 export function deleteGallery(id: string): void {
   assertPermission(Permission.MANAGE_GALLERIES, 'Menghapus Album Galeri');
   const current = getGalleries();
   saveGalleries(current.filter((g) => g.id !== id));
+  asyncSupabaseDelete('galleries', id);
 }
 
 // Gallery Images
@@ -875,18 +945,24 @@ export function saveGalleryImage(item: GalleryImage): void {
   assertPermission(Permission.MANAGE_GALLERIES, 'Menyimpan Foto Galeri');
   const current = getGalleryImages();
   const index = current.findIndex((img) => img.id === item.id);
+  const toSave = {
+    ...item,
+    created_at: item.created_at || new Date().toISOString(),
+  };
   if (index >= 0) {
-    current[index] = item;
+    current[index] = toSave;
   } else {
-    current.unshift(item);
+    current.unshift(toSave);
   }
   saveGalleryImages(current);
+  asyncSupabaseUpsert('gallery_images', toSave);
 }
 
 export function deleteGalleryImage(id: string): void {
   assertPermission(Permission.MANAGE_GALLERIES, 'Menghapus Foto Galeri');
   const current = getGalleryImages();
   saveGalleryImages(current.filter((img) => img.id !== id));
+  asyncSupabaseDelete('gallery_images', id);
 }
 
 // Facilities
@@ -908,18 +984,25 @@ export function saveFacility(facility: Facility): void {
   assertPermission(Permission.MANAGE_FACILITIES, 'Menyimpan Data Fasilitas');
   const current = getFacilities();
   const index = current.findIndex((f) => f.id === facility.id);
+  const toSave = {
+    ...facility,
+    updated_at: new Date().toISOString(),
+    created_at: facility.created_at || new Date().toISOString(),
+  };
   if (index >= 0) {
-    current[index] = { ...facility, updated_at: new Date().toISOString() };
+    current[index] = toSave;
   } else {
-    current.unshift({ ...facility, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+    current.unshift(toSave);
   }
   saveFacilities(current);
+  asyncSupabaseUpsert('facilities', toSave);
 }
 
 export function deleteFacility(id: string): void {
   assertPermission(Permission.MANAGE_FACILITIES, 'Menghapus Fasilitas');
   const current = getFacilities();
   saveFacilities(current.filter((f) => f.id !== id));
+  asyncSupabaseDelete('facilities', id);
 }
 
 // Media

@@ -39,6 +39,7 @@ import PengumumanManager from './pages/admin/PengumumanManager';
 import MediaManager from './pages/admin/MediaManager';
 import PengaturanWebsite from './pages/admin/PengaturanWebsite';
 import ManajemenAkun from './pages/admin/ManajemenAkun';
+import SupabaseIntegration from './pages/admin/SupabaseIntegration';
 
 export default function App() {
   return (
@@ -176,6 +177,14 @@ export default function App() {
             element={
               <ProtectedRoute permission={Permission.VIEW_SETTINGS}>
                 <PengaturanWebsite />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="supabase"
+            element={
+              <ProtectedRoute permission={Permission.VIEW_SETTINGS}>
+                <SupabaseIntegration />
               </ProtectedRoute>
             }
           />
