@@ -51,6 +51,14 @@ export function saveSupabaseConfig(url: string, anonKey: string): void {
     localStorage.setItem(STORAGE_KEYS.ANON_KEY, anonKey.trim());
     // Re-initialize client
     initSupabaseClient();
+    // Replicate config to backend server so other devices get it automatically
+    fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url.trim(), anonKey: anonKey.trim() }),
+    }).catch(() => {
+      // offline / fallback
+    });
   }
 }
 
@@ -59,7 +67,56 @@ export function clearSupabaseConfig(): void {
     localStorage.removeItem(STORAGE_KEYS.URL);
     localStorage.removeItem(STORAGE_KEYS.ANON_KEY);
     initSupabaseClient();
+    // Clear from backend server as well
+    fetch('/api/config', { method: 'DELETE' }).catch(() => {});
   }
+}
+
+/**
+ * Fetch Supabase configuration from central server or static config
+ * This allows all devices and visitors to share the same Supabase configuration!
+ */
+export async function fetchServerSupabaseConfig(): Promise<{ url: string; anonKey: string; isConfigured: boolean } | null> {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const res = await fetch('/api/config');
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.supabase?.url && data?.supabase?.anonKey) {
+        localStorage.setItem(STORAGE_KEYS.URL, data.supabase.url);
+        localStorage.setItem(STORAGE_KEYS.ANON_KEY, data.supabase.anonKey);
+        initSupabaseClient();
+        return {
+          url: data.supabase.url,
+          anonKey: data.supabase.anonKey,
+          isConfigured: true,
+        };
+      }
+    }
+  } catch {
+    // If API unavailable, fallback to static /supabase-config.json
+    try {
+      const resStatic = await fetch('/supabase-config.json');
+      if (resStatic.ok) {
+        const data = await resStatic.json();
+        if (data?.url && data?.anonKey) {
+          localStorage.setItem(STORAGE_KEYS.URL, data.url);
+          localStorage.setItem(STORAGE_KEYS.ANON_KEY, data.anonKey);
+          initSupabaseClient();
+          return {
+            url: data.url,
+            anonKey: data.anonKey,
+            isConfigured: true,
+          };
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return null;
 }
 
 // Global cached client instance

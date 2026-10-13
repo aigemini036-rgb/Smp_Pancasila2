@@ -12,6 +12,33 @@ import {
 import { assertPermission, Permission } from './permissions';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 
+// Helper to asynchronously replicate mutations to central backend server (multi-device sync)
+async function asyncServerUpsert(table: string, data: any) {
+  if (typeof window === 'undefined') return;
+  try {
+    await fetch(`/api/data/${table}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    window.dispatchEvent(new CustomEvent('smp-data-sync-complete'));
+  } catch {
+    // offline or static fallback
+  }
+}
+
+async function asyncServerDelete(table: string, id: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    await fetch(`/api/data/${table}/${id}`, {
+      method: 'DELETE',
+    });
+    window.dispatchEvent(new CustomEvent('smp-data-sync-complete'));
+  } catch {
+    // offline or static fallback
+  }
+}
+
 // Helper to asynchronously replicate mutations to Supabase in the background
 async function asyncSupabaseUpsert(table: string, data: any) {
   if (isSupabaseConfigured()) {
@@ -659,6 +686,7 @@ export function saveSchoolSettings(settings: SchoolSettings): SchoolSettings {
   assertPermission(Permission.MANAGE_SCHOOL_DATA, 'Menyimpan Pengaturan Sekolah');
   const updated = { ...settings, updated_at: new Date().toISOString() };
   localStorage.setItem(KEYS.SETTINGS, JSON.stringify(updated));
+  asyncServerUpsert('settings', updated);
   asyncSupabaseUpsert('school_settings', updated);
   return updated;
 }
@@ -693,6 +721,7 @@ export function getPeople(): Person[] {
 export function savePeople(people: Person[]): void {
   assertPermission(Permission.MANAGE_PERSONNEL, 'Menyimpan Data Personel');
   localStorage.setItem(KEYS.PEOPLE, JSON.stringify(people));
+  asyncServerUpsert('people', people);
 }
 
 export function savePerson(person: Person): void {
@@ -710,6 +739,7 @@ export function savePerson(person: Person): void {
     current.unshift(toSave);
   }
   savePeople(current);
+  asyncServerUpsert('people', toSave);
   asyncSupabaseUpsert('people', toSave);
 }
 
@@ -718,6 +748,7 @@ export function deletePerson(id: string): void {
   const current = getPeople();
   const filtered = current.filter((p) => p.id !== id);
   savePeople(filtered);
+  asyncServerDelete('people', id);
   asyncSupabaseDelete('people', id);
 }
 
@@ -734,6 +765,7 @@ export function getNewsList(): News[] {
 export function saveNewsList(news: News[]): void {
   assertPermission(Permission.MANAGE_NEWS, 'Menyimpan Daftar Berita');
   localStorage.setItem(KEYS.NEWS, JSON.stringify(news));
+  asyncServerUpsert('news', news);
 }
 
 export function saveNews(newsItem: News): void {
@@ -751,6 +783,7 @@ export function saveNews(newsItem: News): void {
     current.unshift(toSave);
   }
   saveNewsList(current);
+  asyncServerUpsert('news', toSave);
   asyncSupabaseUpsert('news', toSave);
 }
 
@@ -759,6 +792,7 @@ export function deleteNews(id: string): void {
   const current = getNewsList();
   const filtered = current.filter((n) => n.id !== id);
   saveNewsList(filtered);
+  asyncServerDelete('news', id);
   asyncSupabaseDelete('news', id);
 }
 
@@ -790,6 +824,7 @@ export function getAgenda(): AgendaItem[] {
 export function saveAgenda(agendas: AgendaItem[]): void {
   assertPermission(Permission.MANAGE_NEWS, 'Menyimpan Agenda Sekolah');
   localStorage.setItem('smp_pancasila_agendas', JSON.stringify(agendas));
+  asyncServerUpsert('agendas', agendas);
 }
 
 // Announcements
@@ -806,6 +841,7 @@ export function getAnnouncements(): Announcement[] {
 export function saveAnnouncements(announcements: Announcement[]): void {
   assertPermission(Permission.MANAGE_ANNOUNCEMENTS, 'Menyimpan Pengumuman');
   localStorage.setItem(KEYS.ANNOUNCEMENTS, JSON.stringify(announcements));
+  asyncServerUpsert('announcements', announcements);
 }
 
 export function saveAnnouncement(announcement: Announcement): void {
@@ -823,6 +859,7 @@ export function saveAnnouncement(announcement: Announcement): void {
     current.unshift(toSave);
   }
   saveAnnouncements(current);
+  asyncServerUpsert('announcements', toSave);
   asyncSupabaseUpsert('announcements', toSave);
 }
 
@@ -830,6 +867,7 @@ export function deleteAnnouncement(id: string): void {
   assertPermission(Permission.MANAGE_ANNOUNCEMENTS, 'Menghapus Pengumuman');
   const current = getAnnouncements();
   saveAnnouncements(current.filter((a) => a.id !== id));
+  asyncServerDelete('announcements', id);
   asyncSupabaseDelete('announcements', id);
 }
 
@@ -856,6 +894,7 @@ export function getAchievements(): Achievement[] {
 export function saveAchievements(achievements: Achievement[]): void {
   assertPermission(Permission.MANAGE_ACHIEVEMENTS, 'Menyimpan Prestasi');
   localStorage.setItem(KEYS.ACHIEVEMENTS, JSON.stringify(achievements));
+  asyncServerUpsert('achievements', achievements);
 }
 
 export function saveAchievement(achievement: Achievement): void {
@@ -873,6 +912,7 @@ export function saveAchievement(achievement: Achievement): void {
     current.unshift(toSave);
   }
   saveAchievements(current);
+  asyncServerUpsert('achievements', toSave);
   asyncSupabaseUpsert('achievements', toSave);
 }
 
@@ -880,6 +920,7 @@ export function deleteAchievement(id: string): void {
   assertPermission(Permission.MANAGE_ACHIEVEMENTS, 'Menghapus Prestasi');
   const current = getAchievements();
   saveAchievements(current.filter((a) => a.id !== id));
+  asyncServerDelete('achievements', id);
   asyncSupabaseDelete('achievements', id);
 }
 
@@ -899,6 +940,7 @@ export const getGalleryAlbums = getGalleries;
 export function saveGalleries(galleries: Gallery[]): void {
   assertPermission(Permission.MANAGE_GALLERIES, 'Menyimpan Album Galeri');
   localStorage.setItem(KEYS.GALLERIES, JSON.stringify(galleries));
+  asyncServerUpsert('galleries', galleries);
 }
 
 export function saveGallery(gallery: Gallery): void {
@@ -916,6 +958,7 @@ export function saveGallery(gallery: Gallery): void {
     current.unshift(toSave);
   }
   saveGalleries(current);
+  asyncServerUpsert('galleries', toSave);
   asyncSupabaseUpsert('galleries', toSave);
 }
 
@@ -923,6 +966,7 @@ export function deleteGallery(id: string): void {
   assertPermission(Permission.MANAGE_GALLERIES, 'Menghapus Album Galeri');
   const current = getGalleries();
   saveGalleries(current.filter((g) => g.id !== id));
+  asyncServerDelete('galleries', id);
   asyncSupabaseDelete('galleries', id);
 }
 
@@ -939,6 +983,7 @@ export function getGalleryImages(): GalleryImage[] {
 export function saveGalleryImages(images: GalleryImage[]): void {
   assertPermission(Permission.MANAGE_GALLERIES, 'Menyimpan Foto Galeri');
   localStorage.setItem(KEYS.GALLERY_IMAGES, JSON.stringify(images));
+  asyncServerUpsert('gallery_images', images);
 }
 
 export function saveGalleryImage(item: GalleryImage): void {
@@ -955,6 +1000,7 @@ export function saveGalleryImage(item: GalleryImage): void {
     current.unshift(toSave);
   }
   saveGalleryImages(current);
+  asyncServerUpsert('gallery_images', toSave);
   asyncSupabaseUpsert('gallery_images', toSave);
 }
 
@@ -962,6 +1008,7 @@ export function deleteGalleryImage(id: string): void {
   assertPermission(Permission.MANAGE_GALLERIES, 'Menghapus Foto Galeri');
   const current = getGalleryImages();
   saveGalleryImages(current.filter((img) => img.id !== id));
+  asyncServerDelete('gallery_images', id);
   asyncSupabaseDelete('gallery_images', id);
 }
 
@@ -978,6 +1025,7 @@ export function getFacilities(): Facility[] {
 export function saveFacilities(facilities: Facility[]): void {
   assertPermission(Permission.MANAGE_FACILITIES, 'Menyimpan Fasilitas Sekolah');
   localStorage.setItem(KEYS.FACILITIES, JSON.stringify(facilities));
+  asyncServerUpsert('facilities', facilities);
 }
 
 export function saveFacility(facility: Facility): void {
@@ -995,6 +1043,7 @@ export function saveFacility(facility: Facility): void {
     current.unshift(toSave);
   }
   saveFacilities(current);
+  asyncServerUpsert('facilities', toSave);
   asyncSupabaseUpsert('facilities', toSave);
 }
 
@@ -1002,6 +1051,7 @@ export function deleteFacility(id: string): void {
   assertPermission(Permission.MANAGE_FACILITIES, 'Menghapus Fasilitas');
   const current = getFacilities();
   saveFacilities(current.filter((f) => f.id !== id));
+  asyncServerDelete('facilities', id);
   asyncSupabaseDelete('facilities', id);
 }
 

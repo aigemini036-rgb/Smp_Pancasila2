@@ -5,7 +5,10 @@ import Footer from '../components/public/Footer';
 import { getSchoolSettings } from '../utils/storage';
 import { MessageCircle, AlertTriangle } from 'lucide-react';
 
+import { useDataSync } from '../hooks/useDataSync';
+
 export default function PublicLayout() {
+  const { dataVersion } = useDataSync();
   const settings = getSchoolSettings();
   const whatsappNumber = settings.whatsapp_number || '6281234567890';
   const showWhatsapp = settings.whatsapp_chat_widget_enabled !== false;
@@ -21,11 +24,11 @@ export default function PublicLayout() {
         </div>
       )}
 
-      <Header />
-      <main className="flex-1 bg-white dark:bg-slate-950">
+      <Header key={`hdr-${dataVersion}`} />
+      <main className="flex-1 bg-white dark:bg-slate-950" key={`main-${dataVersion}`}>
         <Outlet />
       </main>
-      <Footer />
+      <Footer key={`ftr-${dataVersion}`} />
 
       {/* Floating WhatsApp Action Button */}
       {showWhatsapp && (

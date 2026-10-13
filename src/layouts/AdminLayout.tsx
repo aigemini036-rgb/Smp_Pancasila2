@@ -24,21 +24,34 @@ import {
   ArrowRight,
   ExternalLink,
   Database,
+  RefreshCw,
+  CheckCircle2,
+  CloudUpload,
 } from 'lucide-react';
 import { getAuthenticatedUser, logoutAdmin } from '../utils/auth';
 import { getSchoolSettings } from '../utils/storage';
 import { usePermission, Permission } from '../utils/permissions';
 import SchoolLogo from '../components/common/SchoolLogo';
+import { useDataSync } from '../hooks/useDataSync';
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [personelExpanded, setPersonelExpanded] = useState(true);
   const [kontenExpanded, setKontenExpanded] = useState(true);
+  const [syncToast, setSyncToast] = useState<string | null>(null);
+
+  const { isSyncing, lastSyncTime, pushToServer, supabaseReady } = useDataSync();
 
   const navigate = useNavigate();
   const user = getAuthenticatedUser();
   const settings = getSchoolSettings();
   const { can, role } = usePermission();
+
+  const handleManualSync = async () => {
+    const res = await pushToServer();
+    setSyncToast(res.message);
+    setTimeout(() => setSyncToast(null), 5000);
+  };
 
   const handleLogout = () => {
     if (confirm('Apakah Anda yakin ingin keluar dari sistem Admin CMS?')) {
@@ -467,13 +480,32 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Multi-Device Cloud Sync Action */}
+            <button
+              type="button"
+              onClick={handleManualSync}
+              disabled={isSyncing}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1.5 ${
+                isSyncing
+                  ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/30'
+                  : 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 shadow-xs'
+              }`}
+              title="Kirim semua perubahan di browser ini ke server & database agar langsung tampil di HP dan perangkat lain"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 shrink-0 ${isSyncing ? 'animate-spin text-yellow-500' : 'text-emerald-600 dark:text-emerald-400'}`} />
+              <span className="hidden sm:inline font-bold">
+                {isSyncing ? 'Menyinkronkan...' : 'Kirim Perubahan ke HP'}
+              </span>
+              <span className="sm:hidden font-bold">Sync HP</span>
+            </button>
+
             <Link
               to="/"
               className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition-colors flex items-center gap-1.5"
               title="Kunjungi website publik sekolah (sesi akun tetap aktif)"
             >
               <Globe className="w-3.5 h-3.5 text-emerald-500" />
-              <span>Lihat Web Publik</span>
+              <span className="hidden sm:inline">Lihat Web Publik</span>
             </Link>
             <button
               type="button"
@@ -482,10 +514,26 @@ export default function AdminLayout() {
               title="Keluar dari sistem CMS (Logout)"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Keluar Sistem</span>
+              <span className="hidden sm:inline">Keluar</span>
             </button>
           </div>
         </header>
+
+        {/* Sync Toast Notification */}
+        {syncToast && (
+          <div className="bg-emerald-600 text-white px-4 py-2 text-xs font-semibold flex items-center justify-between shadow-md transition-all animate-in fade-in">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+              <span>{syncToast}</span>
+            </div>
+            <button
+              onClick={() => setSyncToast(null)}
+              className="text-emerald-200 hover:text-white text-xs underline font-normal"
+            >
+              Tutup
+            </button>
+          </div>
+        )}
 
         {/* Page Content */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
