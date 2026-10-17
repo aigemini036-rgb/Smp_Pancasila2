@@ -195,14 +195,36 @@ export async function testSupabaseConnection(): Promise<{
     const latencyMs = Math.round(performance.now() - startTime);
 
     if (error) {
-      // Check if it's a 404/PGRST204 meaning table doesn't exist yet, but connection was made!
-      if (error.code === '42P01' || error.message?.includes('relation "school_settings" does not exist')) {
+      // Check if it's missing table (PGRST205 / PGRST204 / 42P01 / schema cache)
+      const isMissingTable =
+        error.code === '42P01' ||
+        error.code === 'PGRST205' ||
+        error.code === 'PGRST204' ||
+        error.message?.includes('schema cache') ||
+        error.message?.includes('does not exist');
+
+      if (isMissingTable) {
+        // Also verify storage endpoint to confirm credentials and network are 100% active
+        try {
+          const { error: storageErr } = await client.storage.listBuckets();
+          if (!storageErr) {
+            return {
+              success: true,
+              latencyMs,
+              message: `Koneksi ke Supabase AKTIF & API Key Valid (${latencyMs}ms)! Tabel database belum dibuat. Silakan jalankan Skrip SQL di Tab 2 (Setup Database & SQL).`,
+            };
+          }
+        } catch {
+          // continue
+        }
+
         return {
           success: true,
           latencyMs,
-          message: 'Berhasil terhubung ke Supabase! Namun tabel database belum dibuat. Silakan jalankan Skrip SQL di Supabase SQL Editor.',
+          message: 'Berhasil terhubung ke Supabase! Namun tabel database belum dibuat. Silakan jalankan Skrip SQL di Tab 2 (Setup Database & SQL).',
         };
       }
+
       return {
         success: false,
         latencyMs,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAnnouncements, saveAnnouncement, deleteAnnouncement } from '../../utils/storage';
 import { Announcement, AnnouncementStatus } from '../../types';
-import { Bell, Plus, Edit2, Trash2, Search, X, Check, Calendar } from 'lucide-react';
+import { Bell, Plus, Edit2, Trash2, Search, X, Check, Calendar, CheckCircle2 } from 'lucide-react';
 import { usePermission, Permission } from '../../utils/permissions';
 
 export default function PengumumanManager() {
@@ -10,6 +10,8 @@ export default function PengumumanManager() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Partial<Announcement> | null>(null);
+  const [modalSaved, setModalSaved] = useState(false);
+  const [savedToast, setSavedToast] = useState<string | null>(null);
 
   useEffect(() => {
     setAnnouncements(getAnnouncements());

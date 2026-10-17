@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getNewsList, saveNews, deleteNews } from '../../utils/storage';
 import { News } from '../../types';
-import { Newspaper, Plus, Edit2, Trash2, Check, X, Search, Calendar } from 'lucide-react';
+import { Newspaper, Plus, Edit2, Trash2, Check, X, Search, Calendar, CheckCircle2 } from 'lucide-react';
 import ImageUpload from '../../components/admin/ImageUpload';
 import { usePermission, Permission } from '../../utils/permissions';
 
@@ -11,6 +11,8 @@ export default function BeritaManager() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState<Partial<News> | null>(null);
+  const [modalSaved, setModalSaved] = useState(false);
+  const [savedToast, setSavedToast] = useState<string | null>(null);
 
   useEffect(() => {
     setNews(getNewsList());
@@ -69,8 +71,14 @@ export default function BeritaManager() {
 
     saveNews(articleToSave);
     setNews(getNewsList());
-    setIsModalOpen(false);
-    setEditingArticle(null);
+    setModalSaved(true);
+    setTimeout(() => {
+      setModalSaved(false);
+      setIsModalOpen(false);
+      setSavedToast(`Artikel berita "${articleToSave.title}" berhasil disimpan!`);
+      setTimeout(() => setSavedToast(null), 4000);
+      setEditingArticle(null);
+    }, 700);
   };
 
   const filtered = news.filter((item) =>
@@ -92,15 +100,24 @@ export default function BeritaManager() {
           </p>
         </div>
 
-        {can(Permission.CREATE_NEWS) && (
-          <button
-            onClick={handleOpenAdd}
-            className="px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold text-xs transition-colors flex items-center gap-2 shadow-md shadow-yellow-500/20"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Tambah Berita Baru</span>
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {savedToast && (
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in shadow-xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>{savedToast}</span>
+            </div>
+          )}
+
+          {can(Permission.CREATE_NEWS) && (
+            <button
+              onClick={handleOpenAdd}
+              className="px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold text-xs transition-colors flex items-center gap-2 shadow-md shadow-yellow-500/20"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Berita Baru</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Search */}
@@ -315,7 +332,13 @@ export default function BeritaManager() {
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-2">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end gap-2.5">
+                {modalSaved && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>Berita Berhasil Disimpan!</span>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -325,9 +348,20 @@ export default function BeritaManager() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold"
+                  className={`px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
+                    modalSaved
+                      ? 'bg-emerald-600 text-white ring-2 ring-emerald-400'
+                      : 'bg-yellow-500 hover:bg-yellow-400 text-slate-900'
+                  }`}
                 >
-                  Simpan Berita
+                  {modalSaved ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Tersimpan!</span>
+                    </>
+                  ) : (
+                    <span>Simpan Berita</span>
+                  )}
                 </button>
               </div>
             </form>

@@ -131,6 +131,18 @@ export async function createStorageBucket(bucketName = getActiveBucketName()): P
           message: `Bucket "${bucketName}" sudah ada di Supabase Storage.`,
         };
       }
+
+      if (
+        error.message?.includes('violates row-level security policy') ||
+        error.message?.includes('AccessDenied') ||
+        (error as any).statusCode === '403'
+      ) {
+        return {
+          success: false,
+          message: `Supabase menerapkan Row-Level Security (RLS) pada pembuatan bucket via Anon Key. Silakan salin & jalankan Skrip SQL di bawah ini pada menu "SQL Editor" di Dashboard Supabase untuk membuat bucket '${bucketName}' secara instan.`,
+        };
+      }
+
       return {
         success: false,
         message: `Gagal membuat bucket via API: ${error.message}. Anda bisa membuatnya lewat Supabase Dashboard -> Storage -> New Bucket ("${bucketName}"), atau via SQL Editor.`,

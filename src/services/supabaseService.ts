@@ -163,11 +163,20 @@ export async function syncAllLocalToSupabase(): Promise<SyncResult> {
     }
 
     const hasErrors = errors.length > 0;
+    const isMissingTables = errors.some(
+      (e) => e.includes('schema cache') || e.includes('does not exist') || e.includes('PGRST205')
+    );
+
+    let message = 'Seluruh data lokal berhasil dimigrasikan ke database Supabase!';
+    if (isMissingTables) {
+      message = 'Tabel database sekolah belum dibuat di Supabase. Buka Tab 2 "Setup Database & SQL", lalu klik "Salin SQL Script" dan jalankan di SQL Editor Supabase.';
+    } else if (hasErrors) {
+      message = `Sinkronisasi selesai dengan beberapa catatan: ${errors.join(', ')}`;
+    }
+
     return {
       success: !hasErrors,
-      message: hasErrors
-        ? `Sinkronisasi selesai dengan beberapa peringatan: ${errors.join(', ')}`
-        : 'Seluruh data lokal berhasil dimigrasikan ke database Supabase!',
+      message,
       counts,
       errors: hasErrors ? errors : undefined,
     };
@@ -302,13 +311,22 @@ export async function syncAllSupabaseToLocal(): Promise<SyncResult> {
     }
 
     const hasErrors = errors.length > 0;
+    const isMissingTables = errors.some(
+      (e) => e.includes('schema cache') || e.includes('does not exist') || e.includes('PGRST205')
+    );
+
+    let message = 'Data dari Supabase berhasil disinkronkan ke cache lokal website!';
+    if (isMissingTables) {
+      message = 'Tabel database Supabase belum dibuat. Website saat ini tetap berjalan lancar menggunakan data server pusat & cache lokal.';
+    } else if (hasErrors) {
+      message = `Tarik data selesai dengan catatan: ${errors.join(', ')}`;
+    }
+
     return {
-      success: !hasErrors,
-      message: hasErrors
-        ? `Tarik data selesai dengan catatan: ${errors.join(', ')}`
-        : 'Data dari Supabase berhasil disinkronkan ke cache lokal website!',
+      success: !hasErrors || isMissingTables,
+      message,
       counts,
-      errors: hasErrors ? errors : undefined,
+      errors: hasErrors && !isMissingTables ? errors : undefined,
     };
   } catch (err: any) {
     return {

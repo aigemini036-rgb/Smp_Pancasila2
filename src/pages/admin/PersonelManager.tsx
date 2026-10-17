@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { getPeople, savePerson, deletePerson } from '../../utils/storage';
 import { Person, CategoryPerson } from '../../types';
 import { usePermission, Permission } from '../../utils/permissions';
-import { Users, Plus, Edit2, Trash2, Check, X, Search, Globe, Mail, ExternalLink } from 'lucide-react';
+import { Users, Plus, Edit2, Trash2, Check, X, Search, Globe, Mail, ExternalLink, CheckCircle2 } from 'lucide-react';
 import ImageUpload from '../../components/admin/ImageUpload';
 
 export default function PersonelManager() {
@@ -16,6 +16,8 @@ export default function PersonelManager() {
   const [selectedCategory, setSelectedCategory] = useState<string>(catFilter || 'semua');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPerson, setEditingPerson] = useState<Partial<Person> | null>(null);
+  const [modalSaved, setModalSaved] = useState(false);
+  const [savedToast, setSavedToast] = useState<string | null>(null);
 
   useEffect(() => {
     setPeople(getPeople());
@@ -94,8 +96,14 @@ export default function PersonelManager() {
 
     savePerson(personToSave);
     setPeople(getPeople());
-    setIsModalOpen(false);
-    setEditingPerson(null);
+    setModalSaved(true);
+    setTimeout(() => {
+      setModalSaved(false);
+      setIsModalOpen(false);
+      setSavedToast(`Data personel "${personToSave.name}" berhasil disimpan!`);
+      setTimeout(() => setSavedToast(null), 4000);
+      setEditingPerson(null);
+    }, 700);
   };
 
   const filtered = people.filter((p) => {
@@ -120,15 +128,24 @@ export default function PersonelManager() {
           </p>
         </div>
 
-        {can(Permission.CREATE_PERSONNEL) && (
-          <button
-            onClick={handleOpenAdd}
-            className="px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold text-xs transition-colors flex items-center gap-2 shadow-md shadow-yellow-500/20"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Tambah Personel Baru</span>
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {savedToast && (
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in shadow-xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>{savedToast}</span>
+            </div>
+          )}
+
+          {can(Permission.CREATE_PERSONNEL) && (
+            <button
+              onClick={handleOpenAdd}
+              className="px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold text-xs transition-colors flex items-center gap-2 shadow-md shadow-yellow-500/20"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Personel Baru</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -493,7 +510,13 @@ export default function PersonelManager() {
                 </label>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-2">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end gap-2.5">
+                {modalSaved && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>Data Berhasil Disimpan!</span>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -503,9 +526,20 @@ export default function PersonelManager() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold"
+                  className={`px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
+                    modalSaved
+                      ? 'bg-emerald-600 text-white ring-2 ring-emerald-400'
+                      : 'bg-yellow-500 hover:bg-yellow-400 text-slate-900'
+                  }`}
                 >
-                  Simpan Data Personel
+                  {modalSaved ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Tersimpan!</span>
+                    </>
+                  ) : (
+                    <span>Simpan Data Personel</span>
+                  )}
                 </button>
               </div>
             </form>

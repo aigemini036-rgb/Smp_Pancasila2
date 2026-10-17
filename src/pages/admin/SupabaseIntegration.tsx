@@ -137,6 +137,7 @@ export default function SupabaseIntegration() {
   const [lastSyncDisplay, setLastSyncDisplay] = useState<string | null>(getLastSyncTime());
   const [isInstantSyncing, setIsInstantSyncing] = useState(false);
   const [autoSyncSuccessMsg, setAutoSyncSuccessMsg] = useState<string | null>(null);
+  const [configSavedRecently, setConfigSavedRecently] = useState(false);
 
   // Stats for local data
   const localStats = {
@@ -433,6 +434,8 @@ VITE_SUPABASE_STORAGE_BUCKET="${bucketName || 'school-media'}"`;
     const newCfg = getSupabaseConfig();
     setConfig(newCfg);
     setTestResult(null);
+    setConfigSavedRecently(true);
+    setTimeout(() => setConfigSavedRecently(false), 4500);
     setImportStatus({
       success: true,
       message: 'Konfigurasi berhasil disimpan ke file .env, file public/supabase-config.json, dan server lokal!',
@@ -724,14 +727,26 @@ VITE_SUPABASE_STORAGE_BUCKET="${bucketName || 'school-media'}"`;
               )}
 
               <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-700/80">
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2.5">
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2 active:scale-95"
+                    className={`px-5 py-2.5 rounded-xl text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 active:scale-95 ${
+                      configSavedRecently
+                        ? 'bg-emerald-600 shadow-emerald-600/30 ring-2 ring-emerald-400'
+                        : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/20'
+                    }`}
                   >
                     <Check className="w-4 h-4" />
-                    <span>Simpan & Sinkronkan ke Seluruh Device</span>
+                    <span>{configSavedRecently ? 'Konfigurasi Tersimpan!' : 'Simpan & Sinkronkan ke Seluruh Device'}</span>
                   </button>
+
+                  {/* Inline notification right next to button */}
+                  {configSavedRecently && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in slide-in-from-left-2 shadow-xs">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span>Data Kredensial Berhasil Disimpan!</span>
+                    </div>
+                  )}
 
                   <button
                     type="button"
@@ -1767,28 +1782,44 @@ ALTER TABLE public.galleries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.gallery_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.facilities ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Public Read All" ON public.school_settings;
 CREATE POLICY "Public Read All" ON public.school_settings FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Full Access Anon" ON public.school_settings;
 CREATE POLICY "Full Access Anon" ON public.school_settings FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Public Read All" ON public.people;
 CREATE POLICY "Public Read All" ON public.people FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Full Access Anon" ON public.people;
 CREATE POLICY "Full Access Anon" ON public.people FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Public Read All" ON public.news;
 CREATE POLICY "Public Read All" ON public.news FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Full Access Anon" ON public.news;
 CREATE POLICY "Full Access Anon" ON public.news FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Public Read All" ON public.announcements;
 CREATE POLICY "Public Read All" ON public.announcements FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Full Access Anon" ON public.announcements;
 CREATE POLICY "Full Access Anon" ON public.announcements FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Public Read All" ON public.achievements;
 CREATE POLICY "Public Read All" ON public.achievements FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Full Access Anon" ON public.achievements;
 CREATE POLICY "Full Access Anon" ON public.achievements FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Public Read All" ON public.galleries;
 CREATE POLICY "Public Read All" ON public.galleries FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Full Access Anon" ON public.galleries;
 CREATE POLICY "Full Access Anon" ON public.galleries FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Public Read All" ON public.gallery_images;
 CREATE POLICY "Public Read All" ON public.gallery_images FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Full Access Anon" ON public.gallery_images;
 CREATE POLICY "Full Access Anon" ON public.gallery_images FOR ALL USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Public Read All" ON public.facilities;
 CREATE POLICY "Public Read All" ON public.facilities FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Full Access Anon" ON public.facilities;
 CREATE POLICY "Full Access Anon" ON public.facilities FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Public Read School Media" ON storage.objects;
@@ -1796,4 +1827,10 @@ CREATE POLICY "Public Read School Media" ON storage.objects FOR SELECT USING (bu
 
 DROP POLICY IF EXISTS "Public Upload School Media" ON storage.objects;
 CREATE POLICY "Public Upload School Media" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'school-media');
+
+DROP POLICY IF EXISTS "Public Update School Media" ON storage.objects;
+CREATE POLICY "Public Update School Media" ON storage.objects FOR UPDATE USING (bucket_id = 'school-media');
+
+DROP POLICY IF EXISTS "Public Delete School Media" ON storage.objects;
+CREATE POLICY "Public Delete School Media" ON storage.objects FOR DELETE USING (bucket_id = 'school-media');
 `;

@@ -103,14 +103,35 @@ export default function PengaturanWebsite() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-black transition-all shadow-md active:scale-95"
-        >
-          <Save className="w-4 h-4" />
-          <span>Simpan Pengaturan</span>
-        </button>
+        <div className="flex items-center gap-3">
+          {saved && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold shadow-xs animate-in fade-in slide-in-from-right-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>Data Berhasil Disimpan!</span>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className={`inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black transition-all shadow-md active:scale-95 ${
+              saved
+                ? 'bg-emerald-600 text-white shadow-emerald-600/30'
+                : 'bg-yellow-500 hover:bg-yellow-400 text-slate-950'
+            }`}
+          >
+            {saved ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span>Tersimpan!</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Simpan Pengaturan</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {saved && (
@@ -699,13 +720,32 @@ export default function PengaturanWebsite() {
         )}
 
         {/* Global Save Button at Bottom */}
-        <div className="flex justify-end pt-2">
+        <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
+          {saved && (
+            <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold shadow-xs animate-in fade-in slide-in-from-right-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>Pengaturan Berhasil Disimpan!</span>
+            </div>
+          )}
           <button
             type="submit"
-            className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-black shadow-lg hover:shadow-xl transition-all active:scale-95"
+            className={`flex items-center gap-2 px-6 py-3 rounded-2xl text-xs font-black shadow-lg hover:shadow-xl transition-all active:scale-95 ${
+              saved
+                ? 'bg-emerald-600 text-white shadow-emerald-600/30 ring-2 ring-emerald-400'
+                : 'bg-yellow-500 hover:bg-yellow-400 text-slate-950'
+            }`}
           >
-            <Save className="w-4 h-4" />
-            <span>Simpan Seluruh Perubahan Pengaturan</span>
+            {saved ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span>Pengaturan Tersimpan!</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Simpan Seluruh Perubahan Pengaturan</span>
+              </>
+            )}
           </button>
         </div>
       </form>
