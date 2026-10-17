@@ -22,6 +22,7 @@ async function asyncServerUpsert(table: string, data: any) {
       body: JSON.stringify(data),
     });
     window.dispatchEvent(new CustomEvent('smp-data-sync-complete'));
+    window.dispatchEvent(new CustomEvent('smp-trigger-auto-push'));
   } catch {
     // offline or static fallback
   }
@@ -34,6 +35,7 @@ async function asyncServerDelete(table: string, id: string) {
       method: 'DELETE',
     });
     window.dispatchEvent(new CustomEvent('smp-data-sync-complete'));
+    window.dispatchEvent(new CustomEvent('smp-trigger-auto-push'));
   } catch {
     // offline or static fallback
   }

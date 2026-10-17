@@ -31,6 +31,9 @@ import {
   EyeOff,
   Shield,
   HardDrive,
+  Radio,
+  Timer,
+  Activity,
 } from 'lucide-react';
 import {
   getSupabaseConfig,
@@ -61,6 +64,16 @@ import {
   getAchievements,
   getGalleries,
 } from '../../utils/storage';
+import {
+  isAutoSyncEnabled,
+  setAutoSyncEnabled,
+  getAutoSyncInterval,
+  setAutoSyncInterval,
+  isAutoSyncRunning,
+  getLastSyncTime,
+  initCloudSync,
+  pushAllLocalDataToServer,
+} from '../../services/cloudSync';
 
 export default function SupabaseIntegration() {
   const [config, setConfig] = useState(getSupabaseConfig());
@@ -117,6 +130,14 @@ export default function SupabaseIntegration() {
     dataConfigExists: boolean;
   } | null>(null);
 
+  // Auto-Sync States
+  const [autoSync, setAutoSync] = useState<boolean>(isAutoSyncEnabled());
+  const [autoSyncRunning, setAutoSyncRunning] = useState<boolean>(isAutoSyncRunning());
+  const [syncInterval, setSyncInterval] = useState<number>(getAutoSyncInterval());
+  const [lastSyncDisplay, setLastSyncDisplay] = useState<string | null>(getLastSyncTime());
+  const [isInstantSyncing, setIsInstantSyncing] = useState(false);
+  const [autoSyncSuccessMsg, setAutoSyncSuccessMsg] = useState<string | null>(null);
+
   // Stats for local data
   const localStats = {
     teachers: getPeople().length,
@@ -143,12 +164,66 @@ export default function SupabaseIntegration() {
       })
       .catch(() => {});
 
+    // Listen to background sync events
+    const handleSyncComplete = (e: any) => {
+      setLastSyncDisplay(e?.detail?.displayTime || new Date().toLocaleTimeString('id-ID'));
+    };
+    const handleAutoSyncStatus = (e: any) => {
+      if (e?.detail) {
+        setAutoSync(e.detail.enabled);
+        setAutoSyncRunning(e.detail.running);
+        setSyncInterval(e.detail.interval);
+        if (e.detail.lastSync) setLastSyncDisplay(e.detail.lastSync);
+      }
+    };
+
+    window.addEventListener('smp-data-sync-complete', handleSyncComplete);
+    window.addEventListener('smp-auto-sync-status-changed', handleAutoSyncStatus);
+
     // Run an initial connection test if configured
     if (config.isConfigured) {
       handleTestConnection();
       handleCheckBucket();
     }
+
+    return () => {
+      window.removeEventListener('smp-data-sync-complete', handleSyncComplete);
+      window.removeEventListener('smp-auto-sync-status-changed', handleAutoSyncStatus);
+    };
   }, []);
+
+  const handleToggleAutoSync = (enabled: boolean) => {
+    setAutoSyncEnabled(enabled);
+    setAutoSync(enabled);
+    setAutoSyncRunning(enabled);
+    setAutoSyncSuccessMsg(
+      enabled
+        ? 'Sinkronisasi otomatis berhasil diaktifkan! Data tersinkron secara real-time saat ada perubahan & setiap interval waktu.'
+        : 'Sinkronisasi otomatis dijeda. Anda tetap dapat melakukan sinkronisasi manual kapan saja.'
+    );
+    setTimeout(() => setAutoSyncSuccessMsg(null), 4500);
+  };
+
+  const handleChangeSyncInterval = (sec: number) => {
+    setAutoSyncInterval(sec);
+    setSyncInterval(sec);
+    setAutoSyncSuccessMsg(`Interval sinkronisasi latar belakang diatur ke setiap ${sec} detik.`);
+    setTimeout(() => setAutoSyncSuccessMsg(null), 3000);
+  };
+
+  const handleInstantAutoSync = async () => {
+    setIsInstantSyncing(true);
+    try {
+      const res = await pushAllLocalDataToServer();
+      setLastSyncDisplay(new Date().toLocaleTimeString('id-ID'));
+      setAutoSyncSuccessMsg(res.message);
+    } catch (e: any) {
+      setAutoSyncSuccessMsg(`Gagal sinkron: ${e.message}`);
+    } finally {
+      setIsInstantSyncing(false);
+      setTimeout(() => setAutoSyncSuccessMsg(null), 4500);
+    }
+  };
 
   const handleTestConnection = async () => {
     setTesting(true);
@@ -1184,6 +1259,14 @@ APP_URL="http://localhost:3000"`}
       {/* ==================================================================== */}
       {activeTab === 'sync' && (
         <div className="space-y-6">
+          {/* Auto-Sync Feedback Banner */}
+          {autoSyncSuccessMsg && (
+            <div className="p-4 rounded-2xl border text-xs flex items-center gap-3 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 shadow-sm transition-all animate-fadeIn">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <p className="font-medium flex-1">{autoSyncSuccessMsg}</p>
+            </div>
+          )}
+
           {/* Sync Result Notice */}
           {syncResult && (
             <div
@@ -1223,6 +1306,154 @@ APP_URL="http://localhost:3000"`}
               </div>
             </div>
           )}
+
+          {/* ================================================================ */}
+          {/* UTAMA: KONTROL SINKRONISASI OTOMATIS (REAL-TIME AUTO-SYNC)       */}
+          {/* ================================================================ */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-emerald-500/30 shadow-md shadow-emerald-500/5 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-700">
+              <div className="flex items-start sm:items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <Radio className="w-6 h-6 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                      Sinkronisasi Otomatis (Real-time Auto-Sync)
+                    </h3>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wide ${
+                        autoSync
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                          : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      {autoSync ? 'AKTIF (ON)' : 'NONAKTIF (OFF)'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    Setiap perubahan data yang Anda simpan akan <strong>otomatis terkirim ke server & database</strong>, dan seluruh perangkat lain (HP, laptop, tablet) akan otomatis diperbarui.
+                  </p>
+                </div>
+              </div>
+
+              {/* Master Toggle Switch */}
+              <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  {autoSync ? 'Auto-Sync Aktif' : 'Auto-Sync Dijeda'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleToggleAutoSync(!autoSync)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    autoSync ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
+                  }`}
+                  role="switch"
+                  aria-checked={autoSync}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                      autoSync ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* 3 Status Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Card 1: Status Engine */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/80 space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    {autoSync && (
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    )}
+                    <span
+                      className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                        autoSync ? 'bg-emerald-500' : 'bg-slate-400'
+                      }`}
+                    ></span>
+                  </span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    Status Latar Belakang
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  {autoSync
+                    ? 'Engine aktif memantau perubahan & tab baru'
+                    : 'Sinkronisasi latar belakang dijeda'}
+                </p>
+                <div className="pt-1 text-[11px] text-slate-400 font-mono">
+                  Terakhir sync:{' '}
+                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                    {lastSyncDisplay || 'Baru saja'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Card 2: Auto-Push saat Edit */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/80 space-y-1.5">
+                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                  <Zap className="w-4 h-4" />
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    Push Otomatis Saat Edit
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  Simpan berita, guru, galeri &rarr; langsung broadcast ke semua device tanpa perlu upload manual.
+                </p>
+                <div className="pt-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  ✓ Aktif Otomatis di Semua Form
+                </div>
+              </div>
+
+              {/* Card 3: Interval Pengecekan */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/80 space-y-2">
+                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                  <Timer className="w-4 h-4" />
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    Interval Polling
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[10, 15, 30, 60].map((sec) => (
+                    <button
+                      key={sec}
+                      type="button"
+                      onClick={() => handleChangeSyncInterval(sec)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold font-mono transition-all ${
+                        syncInterval === sec
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      {sec}d
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  {syncInterval === 15 ? '15 detik (Rekomendasi terbaik)' : `Setiap ${syncInterval} detik`}
+                </p>
+              </div>
+            </div>
+
+            {/* Manual Forced Sync Trigger */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Ingin memastikan seluruh data lokal terkirim ke cloud sekarang juga?
+              </p>
+              <button
+                type="button"
+                onClick={handleInstantAutoSync}
+                disabled={isInstantSyncing}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isInstantSyncing ? 'animate-spin' : ''}`} />
+                <span>{isInstantSyncing ? 'Sedang Menyinkronkan...' : 'Sinkronkan Sekarang'}</span>
+              </button>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Upload to Supabase */}

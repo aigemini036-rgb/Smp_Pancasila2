@@ -5,37 +5,67 @@ import {
   pullAllDataFromServer,
   exportBackupJson,
   importBackupJson,
+  startAutoSync,
+  stopAutoSync,
+  isAutoSyncEnabled,
+  setAutoSyncEnabled,
+  getAutoSyncInterval,
+  setAutoSyncInterval,
+  isAutoSyncRunning,
+  getLastSyncTime,
 } from '../services/cloudSync';
 import { isSupabaseConfigured, getSupabaseConfig } from '../lib/supabase';
 
 let globalSyncPromise: Promise<any> | null = null;
+let autoSyncStarted = false;
 
 export function useDataSync() {
   const [dataVersion, setDataVersion] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSyncTime, setLastSyncTime] = useState<string | null>(null);
+  const [lastSyncTime, setLastSyncTime] = useState<string | null>(getLastSyncTime());
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [supabaseReady, setSupabaseReady] = useState(isSupabaseConfigured());
+  
+  // Auto-sync status
+  const [autoSyncActive, setAutoSyncActive] = useState<boolean>(isAutoSyncEnabled());
+  const [autoSyncRunningState, setAutoSyncRunningState] = useState<boolean>(isAutoSyncRunning());
+  const [autoSyncIntervalSec, setAutoSyncIntervalSec] = useState<number>(getAutoSyncInterval());
+
   const initialRun = useRef(false);
 
   // Listen to cross-component sync event
   useEffect(() => {
     const handleSyncComplete = (e: any) => {
       setDataVersion((v) => v + 1);
-      setLastSyncTime(new Date().toLocaleTimeString('id-ID'));
+      const time = e?.detail?.displayTime || new Date().toLocaleTimeString('id-ID');
+      setLastSyncTime(time);
       setSupabaseReady(isSupabaseConfigured());
       if (e?.detail?.message) {
         setStatusMessage(e.detail.message);
       }
     };
 
+    const handleAutoSyncStatus = (e: any) => {
+      if (e?.detail) {
+        setAutoSyncActive(e.detail.enabled);
+        setAutoSyncRunningState(e.detail.running);
+        setAutoSyncIntervalSec(e.detail.interval);
+        if (e.detail.lastSync) {
+          setLastSyncTime(e.detail.lastSync);
+        }
+      }
+    };
+
     window.addEventListener('smp-data-sync-complete', handleSyncComplete);
+    window.addEventListener('smp-auto-sync-status-changed', handleAutoSyncStatus);
+
     return () => {
       window.removeEventListener('smp-data-sync-complete', handleSyncComplete);
+      window.removeEventListener('smp-auto-sync-status-changed', handleAutoSyncStatus);
     };
   }, []);
 
-  // Run initial cloud & server sync once on component mount
+  // Run initial cloud & server sync once on component mount, and start auto-sync
   useEffect(() => {
     if (!initialRun.current) {
       initialRun.current = true;
@@ -47,6 +77,13 @@ export function useDataSync() {
           setSupabaseReady(isSupabaseConfigured());
           globalSyncPromise = null;
         });
+      }
+
+      // Automatically launch background auto-sync engine if enabled
+      if (!autoSyncStarted && isAutoSyncEnabled()) {
+        autoSyncStarted = true;
+        startAutoSync();
+        setAutoSyncRunningState(true);
       }
     }
   }, []);
@@ -77,6 +114,22 @@ export function useDataSync() {
     }
   }, []);
 
+  const toggleAutoSync = useCallback((enable?: boolean) => {
+    const nextState = typeof enable === 'boolean' ? enable : !autoSyncActive;
+    setAutoSyncEnabled(nextState);
+    setAutoSyncActive(nextState);
+    setAutoSyncRunningState(nextState);
+    if (nextState) {
+      // Trigger an immediate sync when turning on
+      initCloudSync(false).catch(() => {});
+    }
+  }, [autoSyncActive]);
+
+  const changeAutoSyncInterval = useCallback((sec: number) => {
+    setAutoSyncInterval(sec);
+    setAutoSyncIntervalSec(sec);
+  }, []);
+
   return {
     dataVersion,
     isSyncing,
@@ -84,6 +137,13 @@ export function useDataSync() {
     statusMessage,
     supabaseReady,
     supabaseConfig: getSupabaseConfig(),
+    // Auto sync controls
+    autoSyncActive,
+    autoSyncRunning: autoSyncRunningState,
+    autoSyncInterval: autoSyncIntervalSec,
+    toggleAutoSync,
+    changeAutoSyncInterval,
+    // Actions
     pushToServer,
     pullFromServer,
     exportBackup: exportBackupJson,
