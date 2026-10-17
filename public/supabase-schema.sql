@@ -229,4 +229,41 @@ INSERT INTO public.admin_users (id, full_name, email, role, status)
 VALUES ('usr-001', 'Administrator Utama', 'admin@smppancasilaponokawan.sch.id', 'superadmin', 'active')
 ON CONFLICT (id) DO NOTHING;
 
--- Selesai! Skema database siap digunakan oleh aplikasi web SMP Pancasila.
+-- ============================================================================
+-- 10. SUPABASE STORAGE BUCKET (school-media)
+-- Penyimpanan file gambar (foto guru, thumbnail berita, galeri, aset sekolah)
+-- ============================================================================
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+    'school-media',
+    'school-media',
+    true, -- Public bucket agar gambar dapat ditampilkan di website
+    52428800, -- Batas 50 MB
+    ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/gif', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+)
+ON CONFLICT (id) DO UPDATE SET 
+    public = true,
+    file_size_limit = 52428800;
+
+-- Kebijakan Akses Storage
+DROP POLICY IF EXISTS "Public Read School Media" ON storage.objects;
+CREATE POLICY "Public Read School Media"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'school-media');
+
+DROP POLICY IF EXISTS "Public Upload School Media" ON storage.objects;
+CREATE POLICY "Public Upload School Media"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'school-media');
+
+DROP POLICY IF EXISTS "Public Update School Media" ON storage.objects;
+CREATE POLICY "Public Update School Media"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'school-media');
+
+DROP POLICY IF EXISTS "Public Delete School Media" ON storage.objects;
+CREATE POLICY "Public Delete School Media"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'school-media');
+
+-- Selesai! Skema database dan storage bucket siap digunakan oleh aplikasi web SMP Pancasila.

@@ -19,7 +19,7 @@ export function getSupabaseConfig(): {
   const storedAnonKey = (typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEYS.ANON_KEY) || '' : '').trim();
 
   // Stored override takes precedence if set, otherwise use env
-  if (storedUrl && storedAnonKey) {
+  if (storedUrl && storedAnonKey && !storedUrl.includes('your-project-id')) {
     return {
       url: storedUrl,
       anonKey: storedAnonKey,
@@ -45,17 +45,18 @@ export function getSupabaseConfig(): {
   };
 }
 
-export function saveSupabaseConfig(url: string, anonKey: string): void {
+export function saveSupabaseConfig(url: string, anonKey: string, bucket: string = 'school-media'): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem(STORAGE_KEYS.URL, url.trim());
     localStorage.setItem(STORAGE_KEYS.ANON_KEY, anonKey.trim());
+    localStorage.setItem('smp_pancasila_supabase_bucket', (bucket || 'school-media').trim());
     // Re-initialize client
     initSupabaseClient();
     // Replicate config to backend server so other devices get it automatically
     fetch('/api/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url.trim(), anonKey: anonKey.trim() }),
+      body: JSON.stringify({ url: url.trim(), anonKey: anonKey.trim(), bucket: (bucket || 'school-media').trim() }),
     }).catch(() => {
       // offline / fallback
     });
@@ -83,9 +84,16 @@ export async function fetchServerSupabaseConfig(): Promise<{ url: string; anonKe
     const res = await fetch('/api/config');
     if (res.ok) {
       const data = await res.json();
-      if (data?.supabase?.url && data?.supabase?.anonKey) {
+      if (
+        data?.supabase?.url &&
+        data?.supabase?.anonKey &&
+        !data.supabase.url.includes('your-project-id')
+      ) {
         localStorage.setItem(STORAGE_KEYS.URL, data.supabase.url);
         localStorage.setItem(STORAGE_KEYS.ANON_KEY, data.supabase.anonKey);
+        if (data.supabase.bucket) {
+          localStorage.setItem('smp_pancasila_supabase_bucket', data.supabase.bucket);
+        }
         initSupabaseClient();
         return {
           url: data.supabase.url,
@@ -100,9 +108,12 @@ export async function fetchServerSupabaseConfig(): Promise<{ url: string; anonKe
       const resStatic = await fetch('/supabase-config.json');
       if (resStatic.ok) {
         const data = await resStatic.json();
-        if (data?.url && data?.anonKey) {
+        if (data?.url && data?.anonKey && !data.url.includes('your-project-id')) {
           localStorage.setItem(STORAGE_KEYS.URL, data.url);
           localStorage.setItem(STORAGE_KEYS.ANON_KEY, data.anonKey);
+          if (data.bucket) {
+            localStorage.setItem('smp_pancasila_supabase_bucket', data.bucket);
+          }
           initSupabaseClient();
           return {
             url: data.url,

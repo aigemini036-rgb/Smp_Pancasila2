@@ -1,5 +1,7 @@
 import React, { useState, useRef, ChangeEvent, DragEvent, MouseEvent } from 'react';
-import { Upload, Image as ImageIcon, X, RefreshCw, Check, AlertCircle } from 'lucide-react';
+import { Upload, Image as ImageIcon, X, RefreshCw, Check, AlertCircle, Cloud } from 'lucide-react';
+import { uploadFileToSupabase } from '../../services/supabaseStorage';
+import { isSupabaseConfigured } from '../../lib/supabase';
 
 interface ImageUploadProps {
   value?: string;
@@ -9,6 +11,7 @@ interface ImageUploadProps {
   aspectRatio?: 'video' | 'square' | 'portrait' | 'wide' | 'auto';
   className?: string;
   required?: boolean;
+  folder?: string;
 }
 
 /**
@@ -77,11 +80,13 @@ export default function ImageUpload({
   aspectRatio = 'video',
   className = '',
   required = false,
+  folder = 'images',
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadSource, setUploadSource] = useState<'cloud' | 'local' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getAspectClass = () => {
@@ -105,8 +110,8 @@ export default function ImageUpload({
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Ukuran file terlalu besar. Harap pilih gambar di bawah 5MB.');
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Ukuran file terlalu besar. Harap pilih gambar di bawah 10MB.');
       return;
     }
 
@@ -114,8 +119,23 @@ export default function ImageUpload({
     setIsProcessing(true);
 
     try {
+      // 1. If Supabase is configured, attempt direct upload to Supabase Storage Bucket!
+      if (isSupabaseConfigured()) {
+        const uploadResult = await uploadFileToSupabase(file, { folder });
+        if (uploadResult.success && uploadResult.url) {
+          onChange(uploadResult.url);
+          setUploadSource('cloud');
+          setUploadSuccess(true);
+          setTimeout(() => setUploadSuccess(false), 3000);
+          return;
+        }
+        console.warn('Supabase storage upload fallback to local:', uploadResult.error);
+      }
+
+      // 2. Fallback to local optimized base64
       const dataUrl = await processAndCompressImage(file);
       onChange(dataUrl);
+      setUploadSource('local');
       setUploadSuccess(true);
       setTimeout(() => setUploadSuccess(false), 2500);
     } catch (err) {
@@ -239,9 +259,21 @@ export default function ImageUpload({
 
             {/* Success indicator badge */}
             {uploadSuccess && (
-              <div className="absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold shadow-md flex items-center gap-1">
+              <div className="absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-emerald-500 text-white text-[10px] font-bold shadow-md flex items-center gap-1 animate-fade-in">
                 <Check className="w-3 h-3" />
-                Berhasil Diunggah!
+                {uploadSource === 'cloud' ? 'Tersimpan di Supabase Storage!' : 'Tersimpan Lokal!'}
+              </div>
+            )}
+            {!uploadSuccess && value && (
+              <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[9px] font-mono flex items-center gap-1">
+                {value.startsWith('http') ? (
+                  <>
+                    <Cloud className="w-2.5 h-2.5 text-emerald-400" />
+                    <span className="text-emerald-300">Supabase Storage</span>
+                  </>
+                ) : (
+                  <span className="text-slate-300">Lokal Base64</span>
+                )}
               </div>
             )}
           </>

@@ -1,6 +1,8 @@
 import { useState, useRef, ChangeEvent, DragEvent } from 'react';
 import { Upload, X, RefreshCw, Check, AlertCircle, Plus } from 'lucide-react';
 import { processAndCompressImage } from './ImageUpload';
+import { uploadFileToSupabase } from '../../services/supabaseStorage';
+import { isSupabaseConfigured } from '../../lib/supabase';
 
 interface MultiImageUploadProps {
   images: string[];
@@ -9,6 +11,7 @@ interface MultiImageUploadProps {
   helperText?: string;
   maxFiles?: number;
   className?: string;
+  folder?: string;
 }
 
 export default function MultiImageUpload({
@@ -18,6 +21,7 @@ export default function MultiImageUpload({
   helperText = 'Format JPG, PNG, WEBP (Bisa pilih/tarik beberapa foto sekaligus)',
   maxFiles = 20,
   className = '',
+  folder = 'gallery',
 }: MultiImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -41,9 +45,22 @@ export default function MultiImageUpload({
     setIsProcessing(true);
 
     try {
-      const processed = await Promise.all(
-        fileArray.map((file) => processAndCompressImage(file, 1400, 1400, 0.85))
-      );
+      let processed: string[] = [];
+      if (isSupabaseConfigured()) {
+        processed = await Promise.all(
+          fileArray.map(async (file) => {
+            const uploadRes = await uploadFileToSupabase(file, { folder });
+            if (uploadRes.success && uploadRes.url) {
+              return uploadRes.url;
+            }
+            return await processAndCompressImage(file, 1400, 1400, 0.85);
+          })
+        );
+      } else {
+        processed = await Promise.all(
+          fileArray.map((file) => processAndCompressImage(file, 1400, 1400, 0.85))
+        );
+      }
       onChange([...images, ...processed]);
     } catch (err) {
       console.error('Error processing batch images:', err);

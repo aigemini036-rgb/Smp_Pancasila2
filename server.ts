@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
@@ -14,10 +15,12 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Data directory & store paths
+const ROOT_DIR = path.resolve(__dirname);
 const DATA_DIR = path.resolve(__dirname, 'data');
 const STORE_PATH = path.join(DATA_DIR, 'store.json');
 const SUPABASE_CONFIG_PATH = path.join(DATA_DIR, 'supabase-config.json');
 const PUBLIC_SUPABASE_CONFIG_PATH = path.resolve(__dirname, 'public', 'supabase-config.json');
+const ENV_PATH = path.join(ROOT_DIR, '.env');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -62,35 +65,92 @@ app.get('/api/health', (req, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     storeExists: fs.existsSync(STORE_PATH),
-    supabaseConfigured: fs.existsSync(SUPABASE_CONFIG_PATH),
+    supabaseConfigured: fs.existsSync(SUPABASE_CONFIG_PATH) || Boolean(process.env.VITE_SUPABASE_URL),
   });
 });
 
 // -----------------------------------------------------------------------------
-// API Endpoints: Supabase Configuration
+// API Endpoints: Supabase Configuration & API Keys
 // -----------------------------------------------------------------------------
 app.get('/api/config', (req, res) => {
-  const cfg = readJsonFile(SUPABASE_CONFIG_PATH, { url: '', anonKey: '' });
+  // 1. Check data/supabase-config.json
+  let cfg = readJsonFile(SUPABASE_CONFIG_PATH, { url: '', anonKey: '', bucket: 'school-media' });
+  let source: 'file' | 'env' | 'public' | 'none' = 'none';
+
+  // 2. If not found or empty, check public/supabase-config.json
+  if (!cfg.url || !cfg.anonKey || cfg.url.includes('your-project-id')) {
+    const pubCfg = readJsonFile(PUBLIC_SUPABASE_CONFIG_PATH, { url: '', anonKey: '', bucket: 'school-media' });
+    if (pubCfg.url && pubCfg.anonKey && !pubCfg.url.includes('your-project-id')) {
+      cfg = pubCfg;
+      source = 'public';
+    }
+  } else {
+    source = 'file';
+  }
+
+  // 3. If still empty, check process.env / .env
+  const envUrl = (process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '').trim();
+  const envAnonKey = (process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
+  const envBucket = (process.env.VITE_SUPABASE_STORAGE_BUCKET || 'school-media').trim();
+
+  if ((!cfg.url || !cfg.anonKey || cfg.url.includes('your-project-id')) && envUrl && envAnonKey && !envUrl.includes('your-project-id')) {
+    cfg = {
+      url: envUrl,
+      anonKey: envAnonKey,
+      bucket: envBucket || 'school-media',
+    };
+    source = 'env';
+  }
+
   const isConfigured = Boolean(cfg.url && cfg.anonKey && !cfg.url.includes('your-project-id'));
+
   res.json({
     supabase: {
       url: cfg.url || '',
       anonKey: cfg.anonKey || '',
+      bucket: cfg.bucket || 'school-media',
       isConfigured,
+      source,
+    },
+    files: {
+      envExists: fs.existsSync(ENV_PATH),
+      publicConfigExists: fs.existsSync(PUBLIC_SUPABASE_CONFIG_PATH),
+      dataConfigExists: fs.existsSync(SUPABASE_CONFIG_PATH),
     },
   });
 });
 
 app.post('/api/config', (req, res) => {
-  const { url, anonKey } = req.body || {};
+  const { url, anonKey, bucket = 'school-media' } = req.body || {};
   const config = {
     url: typeof url === 'string' ? url.trim() : '',
     anonKey: typeof anonKey === 'string' ? anonKey.trim() : '',
+    bucket: typeof bucket === 'string' ? bucket.trim() : 'school-media',
     updated_at: new Date().toISOString(),
+    comment: 'File konfigurasi database & API key Supabase untuk SMP Pancasila Ponokawan.',
   };
 
   writeJsonFile(SUPABASE_CONFIG_PATH, config);
   writeJsonFile(PUBLIC_SUPABASE_CONFIG_PATH, config);
+
+  // If valid credentials, also update .env file if it exists or create it
+  if (config.url && config.anonKey) {
+    try {
+      const envContent = `# ==============================================================================
+# SMP PANCASILA PONOKAWAN - ENVIRONMENT CONFIGURATION (.env)
+# Terakhir diperbarui: ${new Date().toLocaleString('id-ID')}
+# ==============================================================================
+VITE_SUPABASE_URL="${config.url}"
+VITE_SUPABASE_ANON_KEY="${config.anonKey}"
+VITE_SUPABASE_STORAGE_BUCKET="${config.bucket}"
+APP_URL="${process.env.APP_URL || 'http://localhost:3000'}"
+GEMINI_API_KEY="${process.env.GEMINI_API_KEY || 'MY_GEMINI_API_KEY'}"
+`;
+      fs.writeFileSync(ENV_PATH, envContent, 'utf-8');
+    } catch (e) {
+      console.warn('[Server] Could not write .env file:', e);
+    }
+  }
 
   const isConfigured = Boolean(config.url && config.anonKey);
   res.json({
@@ -98,12 +158,56 @@ app.post('/api/config', (req, res) => {
     supabase: {
       url: config.url,
       anonKey: config.anonKey,
+      bucket: config.bucket,
       isConfigured,
     },
     message: isConfigured
-      ? 'Konfigurasi Supabase berhasil disimpan di server dan disinkronkan ke seluruh perangkat.'
+      ? 'File konfigurasi database & API Key Supabase (.env, public/supabase-config.json, dan server) berhasil diperbarui!'
       : 'Konfigurasi Supabase diperbarui.',
   });
+});
+
+// Download .env file
+app.get('/api/config/download-env', (req, res) => {
+  let cfg = readJsonFile(SUPABASE_CONFIG_PATH, { url: '', anonKey: '', bucket: 'school-media' });
+  if (!cfg.url) {
+    cfg = readJsonFile(PUBLIC_SUPABASE_CONFIG_PATH, { url: '', anonKey: '', bucket: 'school-media' });
+  }
+  const url = cfg.url || process.env.VITE_SUPABASE_URL || 'https://your-project-id.supabase.co';
+  const anonKey = cfg.anonKey || process.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key-here';
+  const bucket = cfg.bucket || 'school-media';
+
+  const envContent = `# ==============================================================================
+# SMP PANCASILA PONOKAWAN - ENVIRONMENT CONFIGURATION (.env)
+# ==============================================================================
+VITE_SUPABASE_URL="${url}"
+VITE_SUPABASE_ANON_KEY="${anonKey}"
+VITE_SUPABASE_STORAGE_BUCKET="${bucket}"
+APP_URL="http://localhost:3000"
+GEMINI_API_KEY="${process.env.GEMINI_API_KEY || 'MY_GEMINI_API_KEY'}"
+`;
+
+  res.setHeader('Content-Type', 'text/plain');
+  res.setHeader('Content-Disposition', 'attachment; filename=".env"');
+  res.send(envContent);
+});
+
+// Download supabase-config.json file
+app.get('/api/config/download-json', (req, res) => {
+  let cfg = readJsonFile(PUBLIC_SUPABASE_CONFIG_PATH, null);
+  if (!cfg || !cfg.url) {
+    cfg = readJsonFile(SUPABASE_CONFIG_PATH, {
+      url: process.env.VITE_SUPABASE_URL || '',
+      anonKey: process.env.VITE_SUPABASE_ANON_KEY || '',
+      bucket: 'school-media',
+      updated_at: new Date().toISOString(),
+      comment: 'File konfigurasi database & API key Supabase untuk SMP Pancasila Ponokawan.',
+    });
+  }
+
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Content-Disposition', 'attachment; filename="supabase-config.json"');
+  res.send(JSON.stringify(cfg, null, 2));
 });
 
 app.delete('/api/config', (req, res) => {
