@@ -69,10 +69,43 @@ export default function SekolahSettings() {
             Kelola identitas resmi, angka statistik (siswa, guru, prestasi), status akreditasi, serta visi-misi SMP Pancasila Ponokawan.
           </p>
         </div>
+
+        {can(Permission.MANAGE_SCHOOL_DATA) && (
+          <div className="flex items-center gap-3 shrink-0">
+            {saved && (
+              <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold shadow-sm animate-in fade-in slide-in-from-right-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>Data Berhasil Disimpan!</span>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className={`px-5 py-2.5 rounded-xl font-black text-xs transition-all flex items-center gap-2 shadow-md active:scale-95 cursor-pointer ${
+                saved
+                  ? 'bg-emerald-600 text-white shadow-emerald-600/30 ring-2 ring-emerald-400'
+                  : 'bg-yellow-500 hover:bg-yellow-400 text-slate-950 shadow-yellow-500/20'
+              }`}
+            >
+              {saved ? (
+                <>
+                  <Check className="w-4 h-4" />
+                  <span>Perubahan Tersimpan!</span>
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4" />
+                  <span>Simpan Perubahan</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
       {saved && (
-        <div className="p-4 rounded-2xl bg-yellow-500/10 border border-yellow-500/40 text-yellow-700 dark:text-yellow-400 text-xs font-bold flex items-center gap-2 shadow-sm animate-in fade-in">
+        <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-2 shadow-sm animate-in fade-in">
           <CheckCircle2 className="w-5 h-5 shrink-0" />
           <span>Perubahan data profil, statistik, dan akreditasi sekolah berhasil disimpan ke website!</span>
         </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   getAdminUsers,
   saveAdminUser,
@@ -17,6 +18,7 @@ import {
   Shield,
   KeyRound,
   CheckCircle2,
+  Check,
   AlertCircle,
   X,
   User,
@@ -32,6 +34,7 @@ import ImageUpload from '../../components/admin/ImageUpload';
 
 export default function ManajemenAkun() {
   const { can } = usePermission();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
   const [currentUser, setCurrentUser] = useState<AdminUser | null>(getAuthenticatedUser());
@@ -40,6 +43,9 @@ export default function ManajemenAkun() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<Partial<AdminUser> | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [modalSaved, setModalSaved] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [passwordSaved, setPasswordSaved] = useState(false);
 
   // My Profile Form State
   const [myProfile, setMyProfile] = useState({
@@ -85,6 +91,13 @@ export default function ManajemenAkun() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add' || searchParams.get('tambah') === 'true') {
+      handleOpenAdd();
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams]);
 
   const handleOpenAdd = () => {
     setEditingUser({
@@ -142,8 +155,12 @@ export default function ManajemenAkun() {
 
     saveAdminUser(userToSave);
     loadData();
-    setIsModalOpen(false);
-    showNotification('success', `Akun ${userToSave.full_name} berhasil disimpan!`);
+    setModalSaved(true);
+    setTimeout(() => {
+      setModalSaved(false);
+      setIsModalOpen(false);
+      showNotification('success', `Akun ${userToSave.full_name} berhasil disimpan!`);
+    }, 800);
   };
 
   const handleDelete = (id: string, name: string) => {
@@ -173,6 +190,8 @@ export default function ManajemenAkun() {
     });
     setCurrentUser(updated);
     loadData();
+    setProfileSaved(true);
+    setTimeout(() => setProfileSaved(false), 3500);
     showNotification('success', 'Profil akun Anda berhasil diperbarui!');
   };
 
@@ -194,6 +213,8 @@ export default function ManajemenAkun() {
       };
       saveAdminUser(updatedUser);
       setPassForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+      setPasswordSaved(true);
+      setTimeout(() => setPasswordSaved(false), 3500);
       showNotification('success', 'Kata sandi akun Anda berhasil diperbarui!');
     }
   };
@@ -246,10 +267,10 @@ export default function ManajemenAkun() {
         {can(Permission.CREATE_USERS) && (
           <button
             onClick={handleOpenAdd}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-black transition-all shadow-md active:scale-95"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-black transition-all shadow-md active:scale-95 cursor-pointer"
           >
             <UserPlus className="w-4 h-4" />
-            <span>Tambah Akun Baru</span>
+            <span>+ Tambah User Baru</span>
           </button>
         )}
       </div>
@@ -280,7 +301,19 @@ export default function ManajemenAkun() {
               <Shield className="w-4 h-4 text-yellow-500" />
               <span>Daftar Akun Pengelola ({users.length})</span>
             </h2>
-            <span className="text-xs text-slate-400">SMP Pancasila CMS</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 hidden sm:inline">SMP Pancasila CMS</span>
+              {can(Permission.CREATE_USERS) && (
+                <button
+                  type="button"
+                  onClick={handleOpenAdd}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-black transition-all shadow-xs active:scale-95 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah User</span>
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="grid gap-3">
@@ -456,11 +489,29 @@ export default function ManajemenAkun() {
                 />
               </div>
 
+              {profileSaved && (
+                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>Profil Berhasil Disimpan!</span>
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl bg-slate-900 dark:bg-yellow-500 text-white dark:text-slate-950 text-xs font-bold transition-all hover:opacity-90 active:scale-95"
+                className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-95 ${
+                  profileSaved
+                    ? 'bg-emerald-600 text-white ring-2 ring-emerald-400'
+                    : 'bg-slate-900 dark:bg-yellow-500 text-white dark:text-slate-950 hover:opacity-90'
+                }`}
               >
-                Simpan Profil Saya
+                {profileSaved ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Profil Tersimpan!</span>
+                  </>
+                ) : (
+                  <span>Simpan Profil Saya</span>
+                )}
               </button>
             </form>
           </div>
@@ -507,11 +558,29 @@ export default function ManajemenAkun() {
                 />
               </div>
 
+              {passwordSaved && (
+                <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>Kata Sandi Berhasil Diperbarui!</span>
+                </div>
+              )}
+
               <button
                 type="submit"
-                className="w-full py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-black transition-all shadow-sm active:scale-95"
+                className={`w-full py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 ${
+                  passwordSaved
+                    ? 'bg-emerald-600 text-white ring-2 ring-emerald-400'
+                    : 'bg-yellow-500 hover:bg-yellow-400 text-slate-950'
+                }`}
               >
-                Perbarui Kata Sandi
+                {passwordSaved ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Kata Sandi Diperbarui!</span>
+                  </>
+                ) : (
+                  <span>Perbarui Kata Sandi</span>
+                )}
               </button>
             </form>
           </div>
@@ -689,7 +758,13 @@ export default function ManajemenAkun() {
                 </div>
               )}
 
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-700">
+              <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-700">
+                {modalSaved && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in slide-in-from-right-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>Akun Berhasil Disimpan!</span>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -699,9 +774,20 @@ export default function ManajemenAkun() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-xs font-black shadow-md transition-all active:scale-95"
+                  className={`px-5 py-2 rounded-xl text-xs font-black shadow-md transition-all flex items-center gap-1.5 active:scale-95 ${
+                    modalSaved
+                      ? 'bg-emerald-600 text-white ring-2 ring-emerald-400'
+                      : 'bg-yellow-500 hover:bg-yellow-400 text-slate-950'
+                  }`}
                 >
-                  Simpan Akun
+                  {modalSaved ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Tersimpan!</span>
+                    </>
+                  ) : (
+                    <span>Simpan Akun</span>
+                  )}
                 </button>
               </div>
             </form>

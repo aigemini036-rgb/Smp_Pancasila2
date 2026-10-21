@@ -12,6 +12,7 @@ import {
   Building,
   Settings,
   UserCheck,
+  UserPlus,
   RefreshCw,
   UploadCloud,
   DownloadCloud,
@@ -358,6 +359,14 @@ export default function Dashboard() {
           >
             <UserCheck className="w-4 h-4 text-yellow-500 shrink-0" />
             <span>Manajemen Akun & Hak Akses</span>
+          </Link>
+
+          <Link
+            to="/admin/akun?action=add"
+            className="p-3.5 rounded-2xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/40 flex items-center gap-3 text-xs font-black text-yellow-700 dark:text-yellow-400 transition-colors shadow-xs"
+          >
+            <UserPlus className="w-4 h-4 text-yellow-500 shrink-0" />
+            <span>+ Tambah User Baru</span>
           </Link>
         </div>
       </div>

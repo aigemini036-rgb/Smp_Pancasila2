@@ -78,7 +78,7 @@ export default function BeritaManager() {
       setSavedToast(`Artikel berita "${articleToSave.title}" berhasil disimpan!`);
       setTimeout(() => setSavedToast(null), 4000);
       setEditingArticle(null);
-    }, 700);
+    }, 1000);
   };
 
   const filtered = news.filter((item) =>

@@ -7,7 +7,7 @@ import {
   saveGalleryImages,
 } from '../../utils/storage';
 import { Gallery, GalleryImage } from '../../types';
-import { Images, Plus, Edit2, Trash2, Search, X, Check, Eye } from 'lucide-react';
+import { Images, Plus, Edit2, Trash2, Search, X, Check, Eye, CheckCircle2 } from 'lucide-react';
 import ImageUpload from '../../components/admin/ImageUpload';
 import MultiImageUpload from '../../components/admin/MultiImageUpload';
 import { usePermission, Permission } from '../../utils/permissions';
@@ -22,6 +22,9 @@ export default function GaleriManager() {
   const [activeGalleryForPhotos, setActiveGalleryForPhotos] = useState<Gallery | null>(null);
   const [editingGallery, setEditingGallery] = useState<Partial<Gallery> | null>(null);
   const [batchNewPhotos, setBatchNewPhotos] = useState<string[]>([]);
+  const [modalSaved, setModalSaved] = useState(false);
+  const [batchSaved, setBatchSaved] = useState(false);
+  const [savedToast, setSavedToast] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -76,13 +79,20 @@ export default function GaleriManager() {
 
     saveGallery(galleryToSave);
     loadData();
-    setIsModalOpen(false);
-    setEditingGallery(null);
+    setModalSaved(true);
+    setTimeout(() => {
+      setModalSaved(false);
+      setIsModalOpen(false);
+      setSavedToast(`Album "${galleryToSave.title}" berhasil disimpan!`);
+      setTimeout(() => setSavedToast(null), 4000);
+      setEditingGallery(null);
+    }, 700);
   };
 
   const handleOpenManagePhotos = (gallery: Gallery) => {
     setActiveGalleryForPhotos(gallery);
     setBatchNewPhotos([]);
+    setBatchSaved(false);
     setIsPhotoModalOpen(true);
   };
 
@@ -101,7 +111,11 @@ export default function GaleriManager() {
 
     saveGalleryImages([...newItems, ...galleryImages]);
     loadData();
-    setBatchNewPhotos([]);
+    setBatchSaved(true);
+    setTimeout(() => {
+      setBatchSaved(false);
+      setBatchNewPhotos([]);
+    }, 1200);
   };
 
   const handleDeleteSinglePhoto = (photoId: string) => {
@@ -128,15 +142,24 @@ export default function GaleriManager() {
           </p>
         </div>
 
-        {can(Permission.CREATE_GALLERY) && (
-          <button
-            onClick={handleOpenAdd}
-            className="px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold text-xs transition-colors flex items-center gap-2 shadow-md shadow-yellow-500/20"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Buat Album Baru</span>
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {savedToast && (
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in shadow-xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>{savedToast}</span>
+            </div>
+          )}
+
+          {can(Permission.CREATE_GALLERY) && (
+            <button
+              onClick={handleOpenAdd}
+              className="px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold text-xs transition-colors flex items-center gap-2 shadow-md shadow-yellow-500/20"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Buat Album Baru</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Search */}
@@ -307,7 +330,13 @@ export default function GaleriManager() {
                 </label>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-2">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end gap-2.5">
+                {modalSaved && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in slide-in-from-right-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>Album Berhasil Disimpan!</span>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -317,9 +346,20 @@ export default function GaleriManager() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold"
+                  className={`px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
+                    modalSaved
+                      ? 'bg-emerald-600 text-white ring-2 ring-emerald-400'
+                      : 'bg-yellow-500 hover:bg-yellow-400 text-slate-900'
+                  }`}
                 >
-                  Simpan Album
+                  {modalSaved ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Tersimpan!</span>
+                    </>
+                  ) : (
+                    <span>Simpan Album</span>
+                  )}
                 </button>
               </div>
             </form>
@@ -359,14 +399,24 @@ export default function GaleriManager() {
               />
 
               {batchNewPhotos.length > 0 && (
-                <div className="flex justify-end pt-2">
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  {batchSaved && (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in slide-in-from-right-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span>Foto Berhasil Disimpan ke Album!</span>
+                    </div>
+                  )}
                   <button
                     type="button"
                     onClick={handleSaveBatchPhotos}
-                    className="px-5 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold text-xs flex items-center gap-2 shadow"
+                    className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 shadow transition-all ${
+                      batchSaved
+                        ? 'bg-emerald-600 text-white ring-2 ring-emerald-400'
+                        : 'bg-yellow-500 hover:bg-yellow-400 text-slate-900'
+                    }`}
                   >
                     <Check className="w-4 h-4" />
-                    <span>Simpan {batchNewPhotos.length} Foto Baru ke Album</span>
+                    <span>{batchSaved ? 'Foto Tersimpan!' : `Simpan ${batchNewPhotos.length} Foto Baru ke Album`}</span>
                   </button>
                 </div>
               )}

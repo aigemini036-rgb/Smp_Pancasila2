@@ -103,7 +103,7 @@ export default function PersonelManager() {
       setSavedToast(`Data personel "${personToSave.name}" berhasil disimpan!`);
       setTimeout(() => setSavedToast(null), 4000);
       setEditingPerson(null);
-    }, 700);
+    }, 1000);
   };
 
   const filtered = people.filter((p) => {

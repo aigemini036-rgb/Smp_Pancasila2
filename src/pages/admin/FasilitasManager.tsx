@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getFacilities, saveFacility, deleteFacility } from '../../utils/storage';
 import { Facility, ContentStatus } from '../../types';
-import { Landmark, Plus, Edit2, Trash2, Search, X, Check, MapPin } from 'lucide-react';
+import { Landmark, Plus, Edit2, Trash2, Search, X, Check, MapPin, CheckCircle2 } from 'lucide-react';
 import ImageUpload from '../../components/admin/ImageUpload';
 import { usePermission, Permission } from '../../utils/permissions';
 
@@ -11,6 +11,8 @@ export default function FasilitasManager() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Partial<Facility> | null>(null);
+  const [modalSaved, setModalSaved] = useState(false);
+  const [savedToast, setSavedToast] = useState<string | null>(null);
 
   useEffect(() => {
     setFacilities(getFacilities());
@@ -59,8 +61,14 @@ export default function FasilitasManager() {
 
     saveFacility(facilityToSave);
     setFacilities(getFacilities());
-    setIsModalOpen(false);
-    setEditingItem(null);
+    setModalSaved(true);
+    setTimeout(() => {
+      setModalSaved(false);
+      setIsModalOpen(false);
+      setSavedToast(`Fasilitas "${facilityToSave.name}" berhasil disimpan!`);
+      setTimeout(() => setSavedToast(null), 4000);
+      setEditingItem(null);
+    }, 1000);
   };
 
   const filtered = facilities.filter(
@@ -83,15 +91,24 @@ export default function FasilitasManager() {
           </p>
         </div>
 
-        {can(Permission.CREATE_FACILITY) && (
-          <button
-            onClick={handleOpenAdd}
-            className="px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold text-xs transition-colors flex items-center gap-2 shadow-md shadow-yellow-500/20"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Tambah Fasilitas Baru</span>
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {savedToast && (
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in shadow-xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>{savedToast}</span>
+            </div>
+          )}
+
+          {can(Permission.CREATE_FACILITY) && (
+            <button
+              onClick={handleOpenAdd}
+              className="px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold text-xs transition-colors flex items-center gap-2 shadow-md shadow-yellow-500/20"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Fasilitas Baru</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Search */}
@@ -274,7 +291,13 @@ export default function FasilitasManager() {
                 </label>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-2">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end gap-2.5">
+                {modalSaved && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>Fasilitas Berhasil Disimpan!</span>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -284,9 +307,20 @@ export default function FasilitasManager() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold"
+                  className={`px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
+                    modalSaved
+                      ? 'bg-emerald-600 text-white ring-2 ring-emerald-400'
+                      : 'bg-yellow-500 hover:bg-yellow-400 text-slate-900'
+                  }`}
                 >
-                  Simpan Fasilitas
+                  {modalSaved ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Tersimpan!</span>
+                    </>
+                  ) : (
+                    <span>Simpan Fasilitas</span>
+                  )}
                 </button>
               </div>
             </form>

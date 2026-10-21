@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAchievements, saveAchievement, deleteAchievement } from '../../utils/storage';
 import { Achievement, AchievementLevel, ContentStatus } from '../../types';
-import { Trophy, Plus, Edit2, Trash2, Search, X, Check, Award } from 'lucide-react';
+import { Trophy, Plus, Edit2, Trash2, Search, X, Check, Award, CheckCircle2 } from 'lucide-react';
 import ImageUpload from '../../components/admin/ImageUpload';
 import { usePermission, Permission } from '../../utils/permissions';
 
@@ -11,6 +11,8 @@ export default function PrestasiManager() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Partial<Achievement> | null>(null);
+  const [modalSaved, setModalSaved] = useState(false);
+  const [savedToast, setSavedToast] = useState<string | null>(null);
 
   useEffect(() => {
     setAchievements(getAchievements());
@@ -72,8 +74,14 @@ export default function PrestasiManager() {
 
     saveAchievement(achievementToSave);
     setAchievements(getAchievements());
-    setIsModalOpen(false);
-    setEditingItem(null);
+    setModalSaved(true);
+    setTimeout(() => {
+      setModalSaved(false);
+      setIsModalOpen(false);
+      setSavedToast(`Prestasi "${achievementToSave.title}" berhasil disimpan!`);
+      setTimeout(() => setSavedToast(null), 4000);
+      setEditingItem(null);
+    }, 1000);
   };
 
   const filtered = achievements.filter(
@@ -97,15 +105,24 @@ export default function PrestasiManager() {
           </p>
         </div>
 
-        {can(Permission.CREATE_ACHIEVEMENT) && (
-          <button
-            onClick={handleOpenAdd}
-            className="px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold text-xs transition-colors flex items-center gap-2 shadow-md shadow-yellow-500/20"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Tambah Prestasi</span>
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {savedToast && (
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in shadow-xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>{savedToast}</span>
+            </div>
+          )}
+
+          {can(Permission.CREATE_ACHIEVEMENT) && (
+            <button
+              onClick={handleOpenAdd}
+              className="px-4 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold text-xs transition-colors flex items-center gap-2 shadow-md shadow-yellow-500/20"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Prestasi</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Search */}
@@ -347,7 +364,13 @@ export default function PrestasiManager() {
                 </label>
               </div>
 
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex justify-end gap-2">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-end gap-2.5">
+                {modalSaved && (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>Prestasi Berhasil Disimpan!</span>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -357,9 +380,20 @@ export default function PrestasiManager() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold"
+                  className={`px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-1.5 ${
+                    modalSaved
+                      ? 'bg-emerald-600 text-white ring-2 ring-emerald-400'
+                      : 'bg-yellow-500 hover:bg-yellow-400 text-slate-900'
+                  }`}
                 >
-                  Simpan Prestasi
+                  {modalSaved ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Tersimpan!</span>
+                    </>
+                  ) : (
+                    <span>Simpan Prestasi</span>
+                  )}
                 </button>
               </div>
             </form>

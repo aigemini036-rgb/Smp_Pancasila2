@@ -7,6 +7,7 @@ import {
   Trash2,
   Copy,
   Check,
+  CheckCircle2,
   Search,
   FileText,
   ExternalLink,
@@ -24,6 +25,7 @@ export default function MediaManager() {
   const [previewMedia, setPreviewMedia] = useState<MediaFile | null>(null);
   const [uploadedBatch, setUploadedBatch] = useState<string[]>([]);
   const [filterType, setFilterType] = useState<'all' | 'image' | 'doc'>('all');
+  const [uploadToast, setUploadToast] = useState<string | null>(null);
 
   useEffect(() => {
     loadMedia();
@@ -51,6 +53,8 @@ export default function MediaManager() {
     saveMediaFiles(updated);
     setMediaList(updated);
     setUploadedBatch([]);
+    setUploadToast(`${newFiles.length} file media berhasil disimpan ke sistem!`);
+    setTimeout(() => setUploadToast(null), 4000);
   };
 
   const handleDelete = (id: string, name: string) => {
@@ -96,6 +100,13 @@ export default function MediaManager() {
             Unggah, kelola, dan salin file foto serta dokumen langsung dari perangkat Anda.
           </p>
         </div>
+
+        {uploadToast && (
+          <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in shadow-xs">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>{uploadToast}</span>
+          </div>
+        )}
       </div>
 
       {/* Upload Zone Card */}

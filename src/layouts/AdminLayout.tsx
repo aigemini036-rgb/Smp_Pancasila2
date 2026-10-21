@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
   Settings,
   UserCheck,
+  UserPlus,
   LogOut,
   GraduationCap,
   ArrowLeft,
@@ -394,22 +395,37 @@ export default function AdminLayout() {
             </NavLink>
           )}
 
-          {/* Akun */}
+          {/* Akun & Tambah User */}
           {can(Permission.MANAGE_USERS) && (
-            <NavLink
-              to="/admin/akun"
-              onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors ${
-                  isActive
-                    ? 'bg-yellow-500 text-slate-900 font-bold shadow'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                }`
-              }
-            >
-              <UserCheck className="w-4 h-4 shrink-0" />
-              <span>Manajemen Akun</span>
-            </NavLink>
+            <div className="pt-2 border-t border-slate-800 space-y-1">
+              <div className="px-3.5 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                Pengguna & Akun
+              </div>
+              <NavLink
+                to="/admin/akun"
+                end
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-colors ${
+                    isActive
+                      ? 'bg-yellow-500 text-slate-900 font-bold shadow'
+                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  }`
+                }
+              >
+                <UserCheck className="w-4 h-4 shrink-0" />
+                <span>Kelola User & Akun</span>
+              </NavLink>
+
+              <NavLink
+                to="/admin/akun?action=add"
+                onClick={() => setSidebarOpen(false)}
+                className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-yellow-400 hover:text-yellow-300 bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 hover:border-yellow-500/50 font-bold text-xs transition-colors"
+              >
+                <UserPlus className="w-4 h-4 shrink-0" />
+                <span>+ Tambah User Baru</span>
+              </NavLink>
+            </div>
           )}
         </nav>
 
@@ -524,6 +540,18 @@ export default function AdminLayout() {
               </span>
               <span className="sm:hidden font-bold">Sync</span>
             </button>
+
+            {/* Quick Add User Action */}
+            {can(Permission.CREATE_USERS) && (
+              <Link
+                to="/admin/akun?action=add"
+                className="px-3 py-1.5 rounded-lg text-xs font-black bg-yellow-500 hover:bg-yellow-400 text-slate-950 transition-all flex items-center gap-1.5 shadow-sm active:scale-95 shrink-0"
+                title="Tambah Akun Pengguna / Admin Baru"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">Tambah User</span>
+              </Link>
+            )}
 
             <Link
               to="/"

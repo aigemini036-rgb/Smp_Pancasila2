@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Check, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getAgenda, saveAgenda, AgendaItem } from '../../utils/storage';
 import { usePermission, Permission } from '../../utils/permissions';
@@ -9,6 +9,8 @@ export default function AgendaManager() {
   const [agendaList, setAgendaList] = useState<AgendaItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [modalSaved, setModalSaved] = useState(false);
+  const [savedToast, setSavedToast] = useState<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -40,12 +42,14 @@ export default function AgendaManager() {
         status: 'Akan Datang'
       });
     }
+    setModalSaved(false);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
+    setModalSaved(false);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -66,7 +70,13 @@ export default function AgendaManager() {
 
     setAgendaList(updatedList);
     saveAgenda(updatedList);
-    handleCloseModal();
+    setModalSaved(true);
+    setTimeout(() => {
+      setModalSaved(false);
+      handleCloseModal();
+      setSavedToast(`Agenda "${formData.title}" berhasil disimpan!`);
+      setTimeout(() => setSavedToast(null), 4000);
+    }, 800);
   };
 
   const handleDelete = (id: string) => {
@@ -84,15 +94,23 @@ export default function AgendaManager() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Kelola Agenda</h1>
           <p className="text-slate-900 dark:text-white ">Tambahkan, ubah, atau hapus agenda kegiatan.</p>
         </div>
-        {can(Permission.CREATE_AGENDA) && (
-          <button
-            onClick={() => handleOpenModal()}
-            className="bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold px-5 py-2.5 rounded-xl font-semibold transition-colors flex items-center gap-2 shadow-sm"
-          >
-            <Plus className="w-5 h-5" />
-            Tambah Agenda
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {savedToast && (
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in shadow-xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span>{savedToast}</span>
+            </div>
+          )}
+          {can(Permission.CREATE_AGENDA) && (
+            <button
+              onClick={() => handleOpenModal()}
+              className="bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold px-5 py-2.5 rounded-xl font-semibold transition-colors flex items-center gap-2 shadow-sm"
+            >
+              <Plus className="w-5 h-5" />
+              Tambah Agenda
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -235,7 +253,13 @@ export default function AgendaManager() {
                 </form>
               </div>
 
-              <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex justify-end gap-3">
+              <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex items-center justify-end gap-3">
+                {modalSaved && (
+                  <div className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-400 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200 text-xs font-bold animate-in fade-in slide-in-from-right-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>Agenda Berhasil Disimpan!</span>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={handleCloseModal}
@@ -246,9 +270,20 @@ export default function AgendaManager() {
                 <button
                   type="submit"
                   form="agenda-form"
-                  className="px-5 py-2.5 rounded-xl font-medium bg-yellow-500 hover:bg-yellow-600 text-slate-900 font-bold shadow-sm transition-colors"
+                  className={`px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 ${
+                    modalSaved
+                      ? 'bg-emerald-600 text-white ring-2 ring-emerald-400'
+                      : 'bg-yellow-500 hover:bg-yellow-600 text-slate-900 shadow-sm'
+                  }`}
                 >
-                  Simpan Agenda
+                  {modalSaved ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Tersimpan!</span>
+                    </>
+                  ) : (
+                    <span>Simpan Agenda</span>
+                  )}
                 </button>
               </div>
             </motion.div>

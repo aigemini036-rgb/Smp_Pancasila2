@@ -58,13 +58,6 @@ export default function Login() {
           </p>
         </div>
 
-        {/* Default Demo Credentials Helper */}
-        <div className="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-700/80 text-xs space-y-1">
-          <p className="font-bold text-yellow-400">Kredensial Login Default Admin:</p>
-          <p className="text-slate-300">Email: <code className="text-yellow-300">admin@pancasilaponokawan.sch.id</code></p>
-          <p className="text-slate-300">Sandi: <code className="text-yellow-300">admin123</code></p>
-        </div>
-
         {error && (
           <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
@@ -84,7 +77,7 @@ export default function Login() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@pancasilaponokawan.sch.id"
+                placeholder="nama@email.com"
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs focus:outline-none focus:border-yellow-500"
               />
             </div>

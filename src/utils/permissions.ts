@@ -132,11 +132,11 @@ export const ROLE_DEFINITIONS: Record<AdminRole, RoleInfo> = {
       'Kelola Data Personel (Guru & Staf)',
       'Kelola Data Fasilitas & Media',
       'Pengaturan Tampilan Website & SEO',
+      'Tambah & Kelola Akun Pengguna',
       'Export Data Cadangan',
     ],
     restrictedFeatures: [
-      'Manajemen Akun Pengguna Lain',
-      'Ubah Hak Akses / Role',
+      'Ubah Hak Akses / Role Super Admin',
       'Import / Reset Database Keseluruhan',
     ],
   },
@@ -242,6 +242,12 @@ export const ROLE_PERMISSIONS: Record<AdminRole, Permission[]> = {
     Permission.EXPORT_BACKUP,
     Permission.BACKUP_RESTORE,
     Permission.SYSTEM_MAINTENANCE,
+    Permission.VIEW_USERS,
+    Permission.CREATE_USERS,
+    Permission.CREATE_USER,
+    Permission.EDIT_USERS,
+    Permission.EDIT_USER,
+    Permission.MANAGE_USERS,
   ],
 
   operator: [
